@@ -1,0 +1,17 @@
+{
+  "title": "Two-Time-Scale Coordination of Vehicle-to-Grid Voltage Support and Frequency Reserve in a Two-Area System Using Proximal Policy Optimization: code, trained policies and data",
+  "upload_type": "software",
+  "license": "MIT",
+  "version": "3.0.0",
+  "creators": [
+    {"name": "Manmai, Sontaya", "affiliation": "Rajamangala University of Technology Thanyaburi"},
+    {"name": "Prabpal, Prakasit", "affiliation": "Udon Thani Technical College"},
+    {"name": "Kongjeen, Yuttana", "affiliation": "Rajamangala University of Technology Isan"},
+    {"name": "Phetphimoon, Wasan", "affiliation": "Kamphaeng Phet Rajabhat University"},
+    {"name": "Yenchamchalit, Kulsomsup", "affiliation": "Thepsatri Rajabhat University"},
+    {"name": "Sonasang, Somchat", "affiliation": "Nakhon Phanom University"},
+    {"name": "Bhumkittipich, Krischonme", "affiliation": "Rajamangala University of Technology Thanyaburi"}
+  ],
+  "description": "Simulation environment (IEEE 33-bus AC power flow per area, two-area load-frequency control with V2G droop, energy-consistent EV fleet), PPO training and evaluation scripts, trained policies, raw evaluation records, verification suite, and the LaTeX source of the manuscript. See README.md and REPRODUCE.md.",
+  "keywords": ["vehicle-to-grid", "reinforcement learning", "proximal policy optimization", "load-frequency control", "voltage regulation", "IEEE 33-bus"]
+}

@@ -1,0 +1,36 @@
+\begin{table*}[!t]
+\caption{Sensitivity of the daily results on the 30 test days to the treatment of the regulation energy. Every row uses the same scenarios, disturbances and controllers; only the energy credited to the droop loop in \eqref{eq:energy} differs. PPO rows pool the five final policies. The last column is the energy by which the stored energy would have left $[E^{\min},E^{\max}]$ without the limit.}
+\label{tab:modes}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llcccccccc}
+\toprule
+\textbf{Controller} & \textbf{Treatment} & \textbf{Cost} & \textbf{SoC def. (\%)} & \textbf{Unmet (MWh)} & \textbf{UV (p.u.$\cdot$h)} & \textbf{Viol. h} & \textbf{Nadir (mHz)} & \textbf{Reg. energy (MWh/d)} & \textbf{Limit viol. (MWh)}\\
+\midrule
+\multirow{5}{*}{UC} & None (neglected) & 477.2 & 0.00 & 0.00 & 7.402 & 19.3 & 54.4 & 0.00 & 0.000 \\
+& 60-s window only & 477.2 & 0.00 & 0.00 & 7.402 & 19.3 & 54.4 & 0.00 & 0.000 \\
+& Hourly extrapolation ($\times 60$) & 477.2 & 0.00 & 0.00 & 7.402 & 19.3 & 54.4 & 0.00 & 0.000 \\
+& Decomposed (default) & 477.2 & 0.00 & 0.00 & 7.402 & 19.3 & 54.4 & 0.00 & 0.000 \\
+& Exact 3600-s simulation & 477.2 & 0.00 & 0.00 & 7.402 & 19.3 & 54.4 & 0.00 & 0.000 \\
+\midrule
+\multirow{5}{*}{RB} & None (neglected) & 245.0 & 13.71 & 0.00 & 2.848 & 12.5 & 49.4 & 0.00 & 0.000 \\
+& 60-s window only & 245.0 & 13.72 & 0.00 & 2.848 & 12.5 & 49.4 & -0.02 & 0.000 \\
+& Hourly extrapolation ($\times 60$) & 247.0 & 13.66 & 0.00 & 2.887 & 12.6 & 49.4 & -1.10 & 0.000 \\
+& Decomposed (default) & 245.5 & 13.58 & 0.00 & 2.860 & 12.5 & 49.4 & -0.46 & 0.000 \\
+& Exact 3600-s simulation & 245.1 & 13.75 & 0.00 & 2.848 & 12.5 & 49.4 & -0.50 & 0.000 \\
+\midrule
+\multirow{5}{*}{DAO} & None (neglected) & 152.2 & 9.59 & 1.28 & 1.045 & 18.2 & 49.8 & 0.00 & 0.000 \\
+& 60-s window only & 152.2 & 9.59 & 1.28 & 1.045 & 18.2 & 49.8 & -0.02 & 0.000 \\
+& Hourly extrapolation ($\times 60$) & 152.5 & 9.92 & 1.30 & 1.045 & 18.2 & 49.8 & -1.02 & 0.000 \\
+& Decomposed (default) & 152.3 & 9.68 & 1.28 & 1.045 & 18.2 & 49.8 & -0.43 & 0.000 \\
+& Exact 3600-s simulation & 152.3 & 9.68 & 1.28 & 1.045 & 18.2 & 49.8 & -0.47 & 0.000 \\
+\midrule
+\multirow{5}{*}{PPO (proposed)} & None (neglected) & 135.5 & 6.26 & 0.00 & 0.904 & 11.9 & 47.3 & 0.00 & 0.000 \\
+& 60-s window only & 135.5 & 6.26 & 0.00 & 0.904 & 11.9 & 47.3 & -0.03 & 0.000 \\
+& Hourly extrapolation ($\times 60$) & 135.6 & 6.42 & 0.00 & 0.905 & 12.0 & 47.3 & -1.67 & 0.000 \\
+& Decomposed (default) & 135.5 & 6.31 & 0.00 & 0.904 & 11.9 & 47.3 & -0.69 & 0.000 \\
+& Exact 3600-s simulation & 135.5 & 6.30 & 0.00 & 0.904 & 11.9 & 47.3 & -0.73 & 0.000 \\
+\bottomrule
+\end{tabular}
+\end{table*}

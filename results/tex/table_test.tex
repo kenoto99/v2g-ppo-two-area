@@ -1,0 +1,29 @@
+\begin{table*}[!t]
+\caption{Results on the 30 held-out test days (mean $\pm$ standard deviation across days). PPO values are pooled over 5 seeds; the value in parentheses is the standard deviation of the per-seed means.}
+\label{tab:test}
+\centering
+\footnotesize
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Metric} & \textbf{UC} & \textbf{RB} & \textbf{DAO} & \textbf{PPO (proposed)}\\
+\midrule
+Daily cost $\sum_t c_t$ & 477.2 $\pm$ 74.8 & 245.5 $\pm$ 31.6 & 152.3 $\pm$ 31.8 & 135.5 $\pm$ 26.0 (1.3) \\
+Voltage-violation hours (h) & 19.3 $\pm$ 3.4 & 12.5 $\pm$ 2.1 & 18.2 $\pm$ 4.0 & 11.9 $\pm$ 5.5 (1.1) \\
+Undervoltage (p.u.$\cdot$h) & 7.40 $\pm$ 1.49 & 2.86 $\pm$ 0.59 & 1.04 $\pm$ 0.37 & 0.90 $\pm$ 0.35 (0.01) \\
+Overvoltage (p.u.$\cdot$h) & 0.050 $\pm$ 0.082 & 0.001 $\pm$ 0.005 & 0.001 $\pm$ 0.005 & 0.004 $\pm$ 0.016 (0.001) \\
+Minimum voltage (p.u.) & 0.835 $\pm$ 0.015 & 0.907 $\pm$ 0.007 & 0.922 $\pm$ 0.007 & 0.925 $\pm$ 0.006 (0.000) \\
+Maximum voltage (p.u.) & 1.044 $\pm$ 0.028 & 1.024 $\pm$ 0.016 & 1.029 $\pm$ 0.019 & 1.024 $\pm$ 0.022 (0.000) \\
+Mean hourly nadir (mHz) & 54.4 $\pm$ 6.2 & 49.4 $\pm$ 6.0 & 49.8 $\pm$ 6.0 & 47.3 $\pm$ 5.9 (0.1) \\
+Worst nadir (mHz) & 79.2 $\pm$ 10.4 & 70.5 $\pm$ 7.6 & 70.5 $\pm$ 7.6 & 69.6 $\pm$ 7.5 (0.4) \\
+RMS frequency deviation (mHz) & 12.80 $\pm$ 1.22 & 11.48 $\pm$ 1.16 & 11.57 $\pm$ 1.18 & 10.87 $\pm$ 1.10 (0.01) \\
+Maximum RoCoF (Hz/s) & 0.154 $\pm$ 0.024 & 0.137 $\pm$ 0.016 & 0.137 $\pm$ 0.016 & 0.133 $\pm$ 0.015 (0.001) \\
+RMS tie-line deviation (MW) & 2.51 $\pm$ 0.23 & 2.49 $\pm$ 0.24 & 2.49 $\pm$ 0.24 & 2.51 $\pm$ 0.25 (0.00) \\
+Mean V2G reserve, both areas (MW) & 0.0 $\pm$ 0.0 & 15.2 $\pm$ 1.4 & 13.9 $\pm$ 2.6 & 25.3 $\pm$ 2.8 (0.3) \\
+Fleet throughput, area level (MWh) & 491 $\pm$ 19 & 337 $\pm$ 92 & 348 $\pm$ 26 & 446 $\pm$ 39 (3) \\
+Terminal SoC deficit (\%) & 0.00 $\pm$ 0.00 & 13.58 $\pm$ 14.06 & 9.68 $\pm$ 13.55 & 6.31 $\pm$ 6.80 (0.69) \\
+Projection events per day & 27.8 $\pm$ 5.0 & 0.0 $\pm$ 0.0 & 1.6 $\pm$ 2.8 & 0.0 $\pm$ 0.0 (0.0) \\
+Energy loss, two feeders (MWh) & 4.978 $\pm$ 0.595 & 3.416 $\pm$ 0.261 & 3.217 $\pm$ 0.338 & 3.159 $\pm$ 0.357 (0.015) \\
+Unmet mobility energy (MWh) & 0.00 $\pm$ 0.00 & 0.00 $\pm$ 0.00 & 1.28 $\pm$ 2.55 & 0.00 $\pm$ 0.00 (0.00) \\
+\bottomrule
+\end{tabular}
+\end{table*}

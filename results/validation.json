@@ -1,0 +1,18 @@
+{
+  "bfs_base_vmin_pu": 0.9130904793688801,
+  "bfs_base_vmin_bus": 18,
+  "bfs_base_loss_kw": 202.677126453445,
+  "bfs_vs_pandapower_max_abs_v_err_pu": 1.219776502026093e-10,
+  "bfs_vs_pandapower_max_abs_loss_err_kw": 5.240952116736253e-08,
+  "lfc_noagc_df_ss_hz_sim": -0.023809523809523794,
+  "lfc_noagc_df_ss_hz_theory": -0.023809523809523808,
+  "lfc_noagc_tie_ss_mw_sim": -4.999999999999993,
+  "lfc_noagc_tie_ss_mw_theory": -5.0,
+  "lfc_agc_df_end_hz": -5.851489005803131e-09,
+  "lfc_agc_tie_end_mw": -1.1473323455342098e-06,
+  "lfc_nadir_area1_hz_noev": 0.04361154698668669,
+  "lfc_nadir_area1_hz_ev25MW": 0.032790628598818365,
+  "lfc_rocof_area1_noev": 0.07854176071619881,
+  "lfc_rocof_area1_ev25MW": 0.06469518838414134,
+  "inter_area_mode_hz_approx": 0.37846987830302403
+}

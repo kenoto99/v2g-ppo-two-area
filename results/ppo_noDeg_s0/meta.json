@@ -1,0 +1,26 @@
+{
+  "args": {
+    "seed": 0,
+    "steps": 200000,
+    "tag": "noDeg",
+    "cfg": "{\"w_deg\":0.0}",
+    "squash": false
+  },
+  "cfg": {
+    "w_deg": 0.0
+  },
+  "env_version": "v3",
+  "wall_s": 744.0586924552917,
+  "hyper": {
+    "lr": "3e-4 linear decay to 0",
+    "n_steps": 384,
+    "n_envs": 4,
+    "batch": 256,
+    "epochs": 10,
+    "gamma": 0.995,
+    "gae": 0.95,
+    "clip": 0.2,
+    "net": "128-128 tanh",
+    "log_std_init": -0.5
+  }
+}

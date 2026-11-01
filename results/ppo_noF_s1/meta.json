@@ -1,0 +1,27 @@
+{
+  "args": {
+    "seed": 1,
+    "steps": 200000,
+    "tag": "noF",
+    "cfg": "{\"w_f\":0.0,\"w_tie\":0.0}",
+    "squash": false
+  },
+  "cfg": {
+    "w_f": 0.0,
+    "w_tie": 0.0
+  },
+  "env_version": "v3",
+  "wall_s": 827.2790904045105,
+  "hyper": {
+    "lr": "3e-4 linear decay to 0",
+    "n_steps": 384,
+    "n_envs": 4,
+    "batch": 256,
+    "epochs": 10,
+    "gamma": 0.995,
+    "gae": 0.95,
+    "clip": 0.2,
+    "net": "128-128 tanh",
+    "log_std_init": -0.5
+  }
+}

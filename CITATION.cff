@@ -1,0 +1,37 @@
+cff-version: 1.2.0
+title: "Two-Time-Scale Coordination of Vehicle-to-Grid Voltage Support and Frequency Reserve in a Two-Area System Using Proximal Policy Optimization: code and data"
+message: "If you use this software or data, please cite it as below."
+type: software
+version: 3.0.0
+date-released: 2026-11-01
+license: MIT
+repository-code: https://github.com/kenoto99/v2g-ppo-two-area
+authors:
+  - family-names: Manmai
+    given-names: Sontaya
+    affiliation: Rajamangala University of Technology Thanyaburi
+  - family-names: Prabpal
+    given-names: Prakasit
+    affiliation: Udon Thani Technical College
+  - family-names: Kongjeen
+    given-names: Yuttana
+    affiliation: Rajamangala University of Technology Isan
+  - family-names: Phetphimoon
+    given-names: Wasan
+    affiliation: Kamphaeng Phet Rajabhat University
+  - family-names: Yenchamchalit
+    given-names: Kulsomsup
+    affiliation: Thepsatri Rajabhat University
+  - family-names: Sonasang
+    given-names: Somchat
+    affiliation: Nakhon Phanom University
+  - family-names: Bhumkittipich
+    given-names: Krischonme
+    affiliation: Rajamangala University of Technology Thanyaburi
+keywords:
+  - vehicle-to-grid
+  - reinforcement learning
+  - proximal policy optimization
+  - load-frequency control
+  - voltage regulation
+  - IEEE 33-bus

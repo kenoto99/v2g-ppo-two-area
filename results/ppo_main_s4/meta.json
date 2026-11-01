@@ -1,0 +1,24 @@
+{
+  "args": {
+    "seed": 4,
+    "steps": 400000,
+    "tag": "main",
+    "cfg": "{}",
+    "squash": false
+  },
+  "cfg": {},
+  "env_version": "v3",
+  "wall_s": 1636.198312997818,
+  "hyper": {
+    "lr": "3e-4 linear decay to 0",
+    "n_steps": 384,
+    "n_envs": 4,
+    "batch": 256,
+    "epochs": 10,
+    "gamma": 0.995,
+    "gae": 0.95,
+    "clip": 0.2,
+    "net": "128-128 tanh",
+    "log_std_init": -0.5
+  }
+}

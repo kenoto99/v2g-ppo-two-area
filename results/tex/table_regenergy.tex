@@ -1,0 +1,20 @@
+\begin{table*}[!t]
+\caption{Energy exchanged by the V2G droop loop and feasibility audit on the test days (area level, both areas). Regulation energy is the battery-side energy including $\eta_{\mathrm{ch}}$ and $\eta_{\mathrm{dis}}$; negative values reduce stored energy. Values use the default decomposed treatment \eqref{eq:decomposed}; the window-only column counts the simulated 60~s. The share is the gross (absolute) regulation energy relative to the battery energy of the scheduled set-points. Counts are summed over all test days (and seeds for PPO); action-clipping counts refer to individual action components.}
+\label{tab:regenergy}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{lccccccccc}
+\toprule
+& \multicolumn{5}{c}{\textbf{Regulation energy}} & \multicolumn{4}{c}{\textbf{Feasibility audit}}\\
+\cmidrule(lr){2-6}\cmidrule(lr){7-10}
+\textbf{Controller} & \textbf{Mean $|\cdot|$ per h} & \textbf{Max $|\cdot|$ per h} & \textbf{Daily sum} & \textbf{Daily sum, window} & \textbf{Gross share of} & \textbf{Raw action} & \textbf{Power} & \textbf{Max power} & \textbf{Max SoC-limit}\\
+ & \textbf{(MWh)} & \textbf{(MWh)} & \textbf{(MWh)} & \textbf{only (MWh)} & \textbf{sched. (\%)} & \textbf{clippings} & \textbf{projections} & \textbf{excess (MW)} & \textbf{violation (MWh)}\\
+\midrule
+UC & 0.000 & 0.000 & 0.00 $\pm$ 0.00 & 0.0000 & 0.00 & 0 & 833 & 0.000 & 0.000 \\
+RB & 0.059 & 0.398 & -0.46 $\pm$ 0.44 & -0.0184 & 0.43 & 0 & 0 & 0.000 & 0.000 \\
+DAO & 0.056 & 0.398 & -0.43 $\pm$ 0.43 & -0.0172 & 0.40 & 0 & 48 & 0.000 & 0.000 \\
+PPO (proposed) & 0.091 & 0.607 & -0.69 $\pm$ 0.68 & -0.0278 & 0.51 & 7080 & 0 & 0.000 & 0.000 \\
+\bottomrule
+\end{tabular}
+\end{table*}
