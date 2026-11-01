@@ -39,6 +39,9 @@ bash scripts/run_queue_v3.sh                      # all training runs (about 4 h
 python scripts/evaluate_all.py UC RB DAO PPO ABL  # test / stress / validation evaluation of every controller
 python scripts/raw_clip_breakdown.py              # per-dimension raw-action saturation of the final policies
 python scripts/evaluate_modes.py decomposed none window hour fullhour   # regulation-energy treatments
+python scripts/dao_rho_sweep.py                   # DAO baseline re-optimised for reserve shares 0.0 to 0.6 (about 45 min)
+python scripts/activation_powerflow.py            # feeder power flow under full and realised reserve activation
+python scripts/chained_days.py                    # the 30 test days run consecutively with carried-over fleet energy
 python scripts/fig_system.py                      # feeder and profile figures
 python scripts/make_results.py                    # every table, figure and number macro
 python scripts/verify_all.py ../manuscript        # independent recomputation and PASS/FAIL report

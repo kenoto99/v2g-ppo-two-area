@@ -50,7 +50,8 @@ with the benchmark costs on the validation days.}
 \label{sec:testres}
 
 Table~\ref{tab:test} summarizes the 30 test days. PPO attains a mean
-daily cost of \TPPOCost, which is \TRedCostDAO\% lower than DAO,
+daily performance cost of \TPPOCost{} (the dimensionless weighted
+penalty of \eqref{eq:cost}, not a monetary cost), which is \TRedCostDAO\% lower than DAO,
 \TRedCostRB\% lower than RB, and \TRedCostUC\% lower than UC. The
 seed-averaged PPO cost is lower than that of DAO on \TWinsDAO{} of the
 30 days and lower than that of RB and UC on \TWinsRB{} and \TWinsUC{}
@@ -72,6 +73,18 @@ Area~1 feeder. Deeper violations remain in Area~2 between 18:00 and
 in (Fig.~\ref{fig:heatmap}). Overvoltage is rare for all
 controllers on the test days because the Area~2 workplace fleet
 absorbs midday PV; the PPO maximum voltage is \TPPOVmaxDay~p.u.
+These figures describe a reduction in the depth and duration of
+undervoltage, not compliance with the band in every hour: on average
+\TPPOViolHours{} of the 48 area-hours of a day remain outside 0.95 to
+1.05~p.u.\ with PPO, and the daily minimum voltage averages
+\TPPOVminDay~p.u. The feeder itself sets this floor. Its nominal
+Baran--Wu loading already has a minimum voltage of \ValVmin~p.u.\ with
+no EVs and no PV (Section~\ref{sec:verif}), and the plugged-in fleet
+of a residential feeder is smallest exactly during the evening peak.
+Keeping every bus inside the band in every hour would need reactive
+power from the chargers, on-load tap changing, or network
+reinforcement, none of which is part of the V2G decision studied
+here.
 
 \emph{Frequency.} PPO holds an average of \TPPOReserveMeanMw~MW of V2G
 reserve across both areas, against \TRBReserveMeanMw~MW for RB and \TDAOReserveMeanMw~MW for DAO,
@@ -86,11 +99,85 @@ the point of the joint allocation.
 
 \emph{Energy and fleet.} PPO leaves a terminal SoC deficit of
 \TPPOSocDefPct\%, against \TDAOSocDefPct\% for DAO and \TRBSocDefPct\%
-for RB. Its fleet throughput, \TPPOThroughputMwh~MWh at area level, is
-higher than that of DAO (\TDAOThroughputMwh~MWh) and RB because the
-policy charges during the day to supply the evening discharge.
+for RB. The deficit is summed over the two areas, so the PPO value
+corresponds to \TPPOSocDefMwh~MWh over the two representative
+feeders, or about \TPPOSocDefKwhVeh~kWh per vehicle averaged over
+both fleets, which is roughly \TPPOSocDefKm~km of driving at
+190~Wh/km or \TPPOSocDefDrivePct\% of the 9~kWh that a vehicle uses
+per day. The deficit is a soft penalty in \eqref{eq:cost}, and the
+driving demand of the day itself is met: unmet mobility energy on the
+test days is \TPPOUnmetMwh~MWh for PPO against \TDAOUnmetMwh~MWh for
+DAO and \TRBUnmetMwh~MWh for RB. Whether a deficit of this size
+matters depends on what happens the next day, which the single-day
+episodes of the main evaluation do not show. Table~\ref{tab:chained}
+therefore runs the same 30 test days consecutively, with the terminal
+energy of each day carried into the next. Costs rise for every
+controller (by \ChPPOCostRise\% for PPO, \ChDAOCostRise\% for DAO, and
+\ChRBCostRise\% for RB), and the residential Area~1 fleet drifts down
+over the month with all three: its terminal SoC ends at
+\ChPPOSocEndFinalOne{} for PPO, \ChDAOSocEndFinalOne{} for DAO, and
+\ChRBSocEndFinalOne{} for RB, against about 0.55 to 0.60 after the
+first day. PPO limits the consequences, with \ChPPOUnmetMwhTotal~MWh
+of unmet mobility energy over the 30 days on \ChPPOUnmetDays{} days,
+against \ChDAOUnmetMwhTotal~MWh on \ChDAOUnmetDays{} days for DAO and
+\ChRBUnmetMwhTotal~MWh for RB, and it stays \ChRedCostDAO\% below DAO
+in cost. The drift nevertheless shows that the soft terminal penalty
+does not guarantee a sustainable energy state for a fleet that is
+discharged every evening. A hard terminal-energy constraint, enforced
+either by a constrained RL formulation or by a projection of the
+set-point onto an energy-feasible set at the last plugged-in hours,
+is the appropriate remedy; we did not implement it here, and the
+single-day results should be read with this in mind. Its fleet
+throughput, \TPPOThroughputMwh~MWh at area level, is higher than that
+of DAO (\TDAOThroughputMwh~MWh) and RB because the policy charges
+during the day to supply the evening discharge.
 Section~\ref{sec:regenergy} examines the energy and power limits in
 detail.
+
+\input{table_chained.tex}
+
+\subsection{Sensitivity of the Benchmark Comparison to the DAO Reserve Share}
+\label{sec:daorho}
+
+DAO fixes the reserve share at $\rho=0.3$ and does not optimize the
+frequency part of \eqref{eq:cost}, whereas PPO decides both the
+set-point and the share. Table~\ref{tab:daorho} removes the
+dependence on that fixed choice by re-optimizing the day-ahead
+schedule for every share from 0 to $\rho_{\max}=0.6$ on the same test
+and stress days. The $\rho=0.3$ row reproduces the DAO column of
+Table~\ref{tab:test}. The test-day cost of the benchmark varies
+between \DaoRhoMinCost{} and \DaoRhoMaxCost{} over the sweep and is
+lowest at $\rho=\DaoRhoBest$ (\DaoRhoBestCost), so the fixed share
+used in the main comparison was close to, but not at, the best fixed
+share. The sweep also makes the trade-off visible that a fixed share
+cannot resolve: raising $\rho$ lowers the mean nadir from
+\DaoRhoZeroNadir~mHz at $\rho=0$ to \DaoRhoBestNadir~mHz at
+$\rho=\DaoRhoBest$, but it raises the undervoltage from
+\DaoRhoZeroUv{} to \DaoRhoBestUv~p.u.$\cdot$h, because the reserve
+removes converter capacity from the voltage schedule in every hour,
+whether or not that hour needs it. PPO reaches an undervoltage of
+\TPPOUvPuH~p.u.$\cdot$h, the level of the lowest shares, together with
+a nadir of \TPPONadirMeanHz~mHz, the level of the highest shares,
+because it moves the share hour by hour.
+
+Against the best fixed share, PPO remains \RedCostDaoRhoBest\% lower in
+cost. The oracle row chooses, for every day separately, the share
+with the lowest realized cost; it uses the outcome of the day and is
+therefore an upper bound on what a DAO with a tuned reserve share
+could achieve. PPO is \RedCostDaoOracle\% below this oracle on the test
+days, lower on \WinsDaoOracle{} of the 30 days ($p=\PDaoOracle$,
+paired Wilcoxon test on the seed-averaged daily costs), and
+\RedCostDaoOracleS\% below it on the stress days, where the oracle
+prefers small shares. The remaining gap is attributable to the
+hour-by-hour allocation of the share and to the closed-loop use of
+the realized SoC, which a day-ahead schedule cannot exploit; it
+is not attributable to the fixed value of $\rho$. The benchmark
+remains limited in the sense that its objective excludes the
+frequency terms, so a day-ahead method that co-optimizes the reserve
+with a frequency model of its own would be a stronger comparator and
+is a natural subject for future work.
+
+\input{table_daorho.tex}
 
 \subsection{Regulation Energy, Treatment Sensitivity, and Feasibility Audit}
 \label{sec:regenergy}
@@ -204,9 +291,28 @@ rating, or to the minimum or maximum reserve share, which are admissible
 operating points because the action bounds coincide with the design
 limits; none of them is a physically infeasible request, as the zero
 projection count for PPO shows. The high rate does, however, mean that
-the Gaussian mean often lies well outside the box, so the gradient of
-the clipped action with respect to the policy parameters is zero in
-those states and exploration there is wasted.
+the Gaussian mean often lies well outside the box, which has three
+consequences. For exploration, the samples drawn around a mean that
+lies outside the box all map to the same boundary action, so the
+policy no longer probes the neighborhood of the operating point it
+has chosen; \ClipDimAll\% of the action components on the test days are
+in this state. For the gradient, PPO updates the Gaussian parameters
+with the log-likelihood of the unclipped sample, so the update still
+pushes the mean further out even though the environment response is
+flat beyond the bound, and the excess (median \ClipMedianExcess) is
+never corrected; the learning signal in those states comes only from
+the value baseline and from the fraction of samples that fall back
+inside the box. For transfer to a physical aggregator, a saturated
+output is benign as long as the bound coincides with a real limit, as
+it does here, because the dispatch then simply requests the full
+rating or the maximum reserve share; it becomes a hazard if the
+deployed limits differ from the training limits, for instance when a
+charger fleet is derated, because the policy has no graded response
+in the saturated region and would jump between the new bound and the
+interior. These effects do not invalidate the results, which are
+measured on the clipped actions actually applied, but they limit how
+much the reported policy can be refined by further training and
+should be weighed by anyone who deploys it.
 
 To test whether a properly bounded policy performs better, a policy
 with a hyperbolic-tangent squashed output and generalized
@@ -228,11 +334,72 @@ the policy gradient near the bounds, which are precisely the
 operating points that the task rewards, so that the bounded policy
 settles in a worse region of the decision space. We therefore keep
 the clipped Gaussian policy for the main results, report its saturation
-statistics openly, and note that a longer training budget, different
-exploration settings, or a Beta-distributed policy could change this
-comparison.
+statistics openly, and note the limits of the comparison: the squashed
+policy was trained with three seeds and half the main budget, its
+exploration mechanism differs from the clipped reference (gSDE against
+independent Gaussian noise), the hyperparameters were not re-tuned for
+it, and only one bounded parameterization was tried. A longer
+training budget, exploration settings tuned for the squashed output,
+or a Beta-distributed policy could change the outcome, so the result
+should be read as "the bounded variant we tried did not help under
+equal conditions" and not as evidence that bounded policies are
+unsuitable for this task.
 
 \input{table_clip.tex}
+
+\subsection{Feeder Power Flow Under Reserve Activation}
+\label{sec:activation}
+
+The slow layer evaluates the feeder voltages at the scheduled power
+$P^{\mathrm{set}}_{i,t}$, whereas the droop loop of the fast layer
+adds up to $\pm R_{i,t}$ to that power during a disturbance. The two
+layers are coupled through the energy balance and through the reserve
+headroom, but the voltage effect of the droop power is not part of
+the hourly power flow. To check whether an activation of the
+committed reserve can drive the feeder outside the band or load its
+branches materially, every test-day hour of RB, DAO, and the five PPO
+policies was re-solved with the scheduled power shifted by the full
+reserve in each direction, that is, at $P^{\mathrm{set}}+R$ (upward
+activation, the fleet discharges more) and at $P^{\mathrm{set}}-R$
+(downward activation, the fleet charges more), and at the realized
+peak droop power of the simulated window. Table~\ref{tab:activation}
+summarizes the \ActPPOViolFracSched\% of PPO area-hours that are outside the
+band at the schedule, against \ActPPOViolFracUp\% under full upward
+activation and \ActPPOViolFracDown\% under full downward activation.
+Upward activation helps the voltage, because it injects power on a
+feeder whose binding problem is undervoltage. Downward activation
+hurts it: \ActPPONewViolFracDown\% of the PPO area-hours that are
+inside the band at the schedule would leave it if the full reserve
+were absorbed for the whole hour, the minimum voltage would fall to
+\ActPPOVminDown~p.u., and the largest additional voltage drop is
+\ActPPODvminDownMax~p.u. The corresponding values for DAO and RB are
+\ActDAONewViolFracDown\% and \ActRBNewViolFracDown\% of area-hours,
+smaller because those controllers hold a fixed 30\% reserve, whereas
+PPO commits more reserve (Table~\ref{tab:test}). Branch currents are
+not a concern in this feeder: the largest branch current rises from
+\ActPPOImaxSchedKa~kA at the schedule to \ActPPOImaxDownKa~kA under
+full downward activation, close to the \ActRefIsub~kA substation current
+of the nominal Baran--Wu loading, and the case data carry no thermal
+rating against which to test it.
+
+The full-reserve case is a worst case that the simulated disturbances
+never reach. The droop loop saturates at $R$ in \TrkPPOSatFrac\% of the time of the exact
+3600-s simulations (Section~\ref{sec:regenergy}), and the realized
+peak droop power of the 60-s windows averages \ActPPOPeakActFracMean\% of
+the committed reserve, with a maximum of \ActPPOPeakActFracMax\% in the
+largest event. At that realized peak, \ActPPONewViolFracDownreal\% of
+the PPO area-hours leave the band and the largest additional voltage
+drop is \ActPPODvminDownrealMax~p.u., reached in the seconds that
+follow the step. The exposure is therefore small for the disturbance
+class modeled here, but it is real, and it grows with the size of the
+committed reserve and the depth of an over-frequency event. Two
+remedies follow directly from the model and are left for future work:
+an asymmetric reserve in which the downward share is limited by the
+voltage margin of the hour, and a voltage-dependent limit on the
+droop power at the feeder level, so that the hourly power flow
+constrains the fast layer as well as the schedule.
+
+\input{table_activation.tex}
 
 \subsection{Operating Behavior on a Representative Day}
 \label{sec:day}
@@ -460,10 +627,46 @@ the throughput term is only a proxy for degradation. Reactive-power
 capability of the chargers, which is effective for voltage control
 \cite{HuEtAl2022}, is not used. The load, PV, and availability profiles
 are synthetic, and the LFC model is linearized with representative
-parameters rather than identified from a specific system. Finally, the
-agent receives hour-ahead forecasts without error; forecast
-uncertainty and communication delays at the aggregator level are left
-for future work.
+parameters rather than identified from a specific system.
+
+Several further simplifications concern the path from the simulated
+aggregator to a deployed one, and they limit the scope of the
+conclusions as follows. (i) \emph{Forecast errors.} The agent
+receives the hour-ahead load, PV, and availability without error.
+With real forecasts the voltage effect of a set-point would be
+mis-estimated by the forecast error of the net load on the feeder,
+and a policy trained on perfect foresight can be over-confident; the
+stress days vary the level of load and participation but not the
+forecast accuracy, so the robustness reported in
+Section~\ref{sec:stress} does not cover this. (ii) \emph{Communication
+and actuation delays.} The droop response is modeled with a single
+0.15-s converter lag. Aggregator-level delays of several hundred
+milliseconds to seconds, and their time variation, are known to
+reduce the damping of the LFC loop and can destabilize it when the
+V2G gain is large \cite{KoSung2018}; our fast-layer results assume
+that the droop is implemented locally at the charger with a
+broadcast gain, which avoids the delay but requires the reserve share
+to be communicated in advance. (iii) \emph{Charger and vehicle
+heterogeneity.} All chargers are 7.4~kW bidirectional units with the
+same efficiency, and all vehicles have 60-kWh batteries and the same
+daily driving energy; the dispersion of ratings, efficiencies, SoC,
+and departure times in a real fleet reduces the deliverable power
+near the limits (Section~\ref{sec:fleet}) and would require a
+vehicle-level allocation layer below the aggregator. (iv)
+\emph{Converter dynamics.} The chargers are represented by a
+first-order lag and a saturation; current limits, phase-locked-loop
+and control-loop dynamics, and the reactive-power capability that is
+effective for voltage control \cite{HuEtAl2022} are omitted, so the
+fast-layer response is idealized. (v) \emph{Parameter uncertainty.}
+The LFC parameters (inertia, damping, governor and turbine time
+constants, tie-line stiffness) and the fleet parameters are fixed at
+representative values; the policy was not trained or tested across
+their plausible ranges, and the reserve allocation it learned is tied
+to the inertia profile assumed here. These five items define the
+conditions under which the reported gains hold. Extending the
+training distribution to forecast errors, delays, and parameter
+ranges, and adding a vehicle-level dispatch layer, are the steps
+needed before the policy could be considered for field use.
 
 % ============================================================
 \section{Conclusion}
@@ -490,13 +693,30 @@ frequency nadir by \TRedNadirMeanHzDAO\%, and the terminal SoC deficit
 from \TDAOSocDefPct\% to \TPPOSocDefPct\%. The policy learned to hold
 reserve mainly where and when vehicles are plugged in, including the
 low-inertia midday hours in the workplace area, and to release it when
-converter capacity is needed for voltage support. On
+converter capacity is needed for voltage support. The advantage over
+the day-ahead benchmark persists when that benchmark is re-optimized
+for every reserve share between 0 and 0.6 and even against a per-day
+oracle choice of the share (Table~\ref{tab:daorho}).
+
+Three further checks bound these results. The cost is a dimensionless
+weighted penalty rather than a monetary cost, and the voltage gains
+are a reduction of undervoltage on a weak feeder, not compliance with
+the band in every hour. A momentary activation of the committed
+reserve in the downward direction can push additional hours of the
+feeder below the band; at the activation levels reached by the
+simulated disturbances the effect is small, but it grows with the
+committed reserve and should be limited by a voltage-aware reserve
+rule. When the test days are run consecutively without resetting the
+fleet energy, the residential fleet drifts to a lower SoC with every
+controller, least with PPO, which shows that the soft terminal
+penalty does not by itself guarantee a sustainable energy state. On
 out-of-distribution stress days the policy kept the lowest cost but
 showed larger SoC deficits and more frequent shallow violations,
 which marks the limits of the training distribution.
 
 Future work will add charger reactive power, forecast uncertainty,
-heterogeneous feeders, electricity-cost terms in the objective, and
+communication delays, heterogeneous feeders and fleets, electricity-cost
+terms in the objective, a voltage-aware limit on the droop power, and
 constrained RL formulations that enforce terminal energy requirements
 as hard constraints.
 

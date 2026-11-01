@@ -57,7 +57,8 @@ check("LFC steady-state dPtie = -5 MW", abs(val["lfc_noagc_tie_ss_mw_sim"] + 5.0
 
 # ------------------------------------------------------------------ 3 provenance of results
 section("3. Provenance: results come from the corrected model")
-files = sorted(glob.glob(f"{E}/*.json"))
+files = sorted(f_ for f_ in glob.glob(f"{E}/*.json")
+               if os.path.basename(f_) in ("UC.json", "RB.json", "DAO.json") or os.path.basename(f_).startswith("ppo_"))   # per-day evaluation records only
 corr = all("reg_batt_mwh" in d and "raw_clip_events" in d for f in files for s in json.load(open(f)).values() for d in s)
 check("every evaluation record contains regulation-energy and clipping fields", corr, f"{len(files)} files")
 allrec = [d for f_ in files for s_ in json.load(open(f_)).values() for d in s_]
@@ -211,7 +212,7 @@ def table_cells(path):
             parts = [p.strip() for p in line.split("\\\\")[0].split("&")]
             rows[parts[0]] = parts[1:]
     return rows
-TLAB = {"Daily cost": "Cost", "Voltage-violation hours": "ViolHours", "Undervoltage": "UvPuH", "Overvoltage": "OvPuH",
+TLAB = {"Daily performance cost": "Cost", "Daily cost": "Cost", "Voltage-violation hours": "ViolHours", "Undervoltage": "UvPuH", "Overvoltage": "OvPuH",
         "Minimum voltage": "VminDay", "Maximum voltage": "VmaxDay", "Mean hourly nadir": "NadirMeanHz", "Worst nadir": "NadirMaxHz",
         "RMS frequency": "FRmsMhz", "Maximum RoCoF": "RocofMax", "RMS tie-line": "TieRmsMw", "Mean V2G reserve": "ReserveMeanMw",
         "Fleet throughput": "ThroughputMwh", "Terminal SoC": "SocDefPct", "Projection events": "ProjEvents", "Energy loss": "LossMwh",
@@ -232,6 +233,106 @@ for tab, split in [("table_test.tex", "test"), ("table_stress.tex", "stress")]:
             if cell != exp:
                 bad.append(f"{lab[:20]}/{c}: {cell} vs {exp}")
     check(f"{tab}: every cell equals recomputation", not bad and n > 0, f"{n} cells; " + ("; ".join(bad[:5]) if bad else "0 mismatches"))
+
+# ---- new analyses requested in the second technical review: DAO reserve-share sweep and activation power flow
+RHO = {float(os.path.basename(p_)[4:-5]): json.load(open(p_)) for p_ in sorted(glob.glob(f"{E}/dao_rho/rho_*.json"))}
+if RHO and os.path.exists(f"{MS}/table_daorho.tex"):
+    rhos = sorted(RHO)
+    C = {r_: {s_: np.array([-10 * d["reward"] for d in RHO[r_][s_]]) for s_ in ("test", "stress")} for r_ in rhos}
+    pt = vals("test", "PPO", "COST"); ps_ = vals("stress", "PPO", "COST")
+    orc = np.min([C[r_]["test"] for r_ in rhos], axis=0); orcs = np.min([C[r_]["stress"] for r_ in rhos], axis=0)
+    means = {r_: C[r_]["test"].mean() for r_ in rhos}; rb_ = min(means, key=means.get)
+    bad = []
+    for nm, exp in [("DaoRhoBest", f"{rb_:.1f}"), ("DaoRhoBestCost", f(means[rb_], 1)), ("DaoRhoOracleCost", f(orc.mean(), 1)),
+                    ("DaoRhoOracleCostS", f(orcs.mean(), 1)), ("RedCostDaoRhoBest", f((1 - pt.mean() / means[rb_]) * 100, 1)),
+                    ("RedCostDaoOracle", f((1 - pt.mean() / orc.mean()) * 100, 1)), ("RedCostDaoOracleS", f((1 - ps_.mean() / orcs.mean()) * 100, 1)),
+                    ("PDaoOracle", f"{wilcoxon(pt.mean(axis=0), orc).pvalue:.1e}".replace("e-0", "\\times10^{-").replace("e-", "\\times10^{-") + "}"), ("WinsDaoOracle", str(int(np.sum(pt.mean(axis=0) < orc)))),
+                    ("DaoRhoMinCost", f(min(means.values()), 1)), ("DaoRhoMaxCost", f(max(means.values()), 1))]:
+        checked.add(nm)
+        if macros.get(nm) != exp:
+            bad.append(f"{nm}: {macros.get(nm)} vs {exp}")
+    # the fixed-share DAO of the main table must be the rho=0.3 row of the sweep
+    same = abs(C[0.3]["test"].mean() - vals("test", "DAO", "COST").mean()) < 0.05
+    check("DAO reserve-share sweep: macros recomputed and rho=0.3 row reproduces the main DAO baseline", not bad and same,
+          "; ".join(bad) if bad else f"rho=0.3 sweep {C[0.3]['test'].mean():.2f} vs main DAO {vals('test', 'DAO', 'COST').mean():.2f}")
+    cells = table_cells(f"{MS}/table_daorho.tex"); bad = []
+    for r_ in rhos:
+        c_ = cells.get(f"{r_:.1f}")
+        exp = f"{f(C[r_]['test'].mean(), 1)} $\\pm$ {f(C[r_]['test'].std(ddof=1), 1)}"
+        if c_ is None or c_[0] != exp or c_[5] != f"{f(C[r_]['stress'].mean(), 1)} $\\pm$ {f(C[r_]['stress'].std(ddof=1), 1)}":
+            bad.append(f"rho={r_}")
+    check("table_daorho.tex: cost cells equal recomputation", not bad, "; ".join(bad) if bad else f"{len(rhos)} rows")
+if os.path.exists(f"{E}/activation_pf.json") and os.path.exists(f"{MS}/table_activation.tex"):
+    A = json.load(open(f"{E}/activation_pf.json"))
+    seeds = A["PPO_seeds"]
+    bad = []
+    for k in ("viol_frac_sched", "viol_frac_down", "viol_frac_up", "new_viol_frac_down"):
+        m_ = np.mean([s_[k] for s_ in seeds]) * 100; sd_ = np.std([s_[k] for s_ in seeds], ddof=1) * 100
+        nm = "ActPPO" + "".join(w.title() for w in k.split("_")); checked.add(nm)
+        if macros.get(nm) != f(m_, 1):
+            bad.append(f"{nm}: {macros.get(nm)} vs {f(m_, 1)}")
+        if abs(A["PPO"][k] * 100 - m_) > 1e-9 or abs(A["PPO_sd"][k] * 100 - sd_) > 1e-9:
+            bad.append(f"{k}: stored mean/sd differ from per-seed values")
+    for k in ("dvmin_down_max", "vmin_down", "vmax_up"):
+        nm = "ActPPO" + "".join(w.title() for w in k.split("_")); checked.add(nm)
+        if macros.get(nm) != f(np.mean([s_[k] for s_ in seeds]), 3):
+            bad.append(nm)
+    for c in ("RB", "DAO"):
+        for k in ("viol_frac_sched", "viol_frac_down", "new_viol_frac_down"):
+            nm = f"Act{c}" + "".join(w.title() for w in k.split("_")); checked.add(nm)
+            if macros.get(nm) != f(A[c][k] * 100, 1):
+                bad.append(nm)
+    # sanity: the band fractions at the schedule must agree with the violation hours of the main evaluation
+    for c in ("RB", "DAO"):
+        vh = vals("test", c, "viol_hours").mean() / 48 * 100
+        if abs(vh - A[c]["viol_frac_sched"] * 100) > 0.05:
+            bad.append(f"{c}: schedule band fraction {A[c]['viol_frac_sched']*100:.2f} vs main evaluation {vh:.2f}")
+    vh = vals("test", "PPO", "viol_hours").mean() / 48 * 100
+    if abs(vh - A["PPO"]["viol_frac_sched"] * 100) > 0.05:
+        bad.append(f"PPO: schedule band fraction {A['PPO']['viol_frac_sched']*100:.2f} vs main evaluation {vh:.2f}")
+    check("activation power flow: macros recomputed from per-seed records and schedule case matches Table test", not bad,
+          "; ".join(bad) if bad else "PPO/RB/DAO consistent")
+
+if os.path.exists(f"{E}/chained_days.json") and os.path.exists(f"{MS}/table_chained.tex"):
+    CH = json.load(open(f"{E}/chained_days.json")); bad = []
+    for k, d in [("cost_mean", 1), ("soc_def_pct_mean", 2), ("soc_end_final_1", 3), ("soc_end_final_2", 3), ("unmet_mwh_total", 1), ("unmet_days", 1)]:
+        nm = "".join(w.title() for w in k.split("_")).replace("1", "One").replace("2", "Two")
+        for c in ("RB", "DAO"):
+            checked.add(f"Ch{c}{nm}")
+            # recompute from the per-day lists where available
+            if k == "cost_mean":
+                exp = f(np.mean(CH[c]["cost"]), d)
+            elif k == "soc_end_final_1":
+                exp = f(CH[c]["soc_end_1"][-1], d)
+            elif k == "soc_end_final_2":
+                exp = f(CH[c]["soc_end_2"][-1], d)
+            else:
+                exp = f(CH[c][k], d)
+            if macros.get(f"Ch{c}{nm}") != exp:
+                bad.append(f"Ch{c}{nm}")
+        checked.add(f"ChPPO{nm}")
+        if macros.get(f"ChPPO{nm}") != f(np.mean([s_[k] for s_ in CH["PPO_seeds"]]), d):
+            bad.append(f"ChPPO{nm}")
+    for c in ("RB", "DAO", "PPO"):
+        checked.add(f"Ch{c}CostRise")
+    if macros.get("ChPPOCostRise") != f((np.mean([np.mean(s_["cost"]) for s_ in CH["PPO_seeds"]]) / vals("test", "PPO", "COST").mean() - 1) * 100, 1):
+        bad.append("ChPPOCostRise")
+    # the first chained day must reproduce the first independent test day exactly (same initial energy)
+    for c in ("RB", "DAO"):
+        if abs(CH[c]["cost"][0] - vals("test", c, "COST")[0]) > 1e-6:
+            bad.append(f"{c}: day-1 chained cost {CH[c]['cost'][0]:.3f} vs independent {vals('test', c, 'COST')[0]:.3f}")
+    for s_, r_ in zip(CH["PPO_seeds"], vals("test", "PPO", "COST")):
+        if abs(s_["cost"][0] - r_[0]) > 1e-6:
+            bad.append("PPO: day-1 chained cost differs from independent evaluation")
+    check("consecutive-day evaluation: macros recomputed and day 1 reproduces the independent evaluation", not bad, "; ".join(bad) if bad else "consistent")
+# per-vehicle expression of the SoC deficit (300 vehicles x 60 kWh per feeder, 9 kWh/day driving, 190 Wh/km)
+bad = []
+for S, split in [("T", "test"), ("S", "stress")]:
+    d_pct = vals(split, "PPO", "soc_def_pct").mean(); kwh = d_pct / 100 * 60 / 2
+    for nm, exp in [(f"{S}PPOSocDefKwhVeh", f(kwh, 1)), (f"{S}PPOSocDefKm", f(kwh * 1e3 / 190, 0)), (f"{S}PPOSocDefDrivePct", f(kwh / 9 * 100, 0)), (f"{S}PPOSocDefMwh", f(d_pct / 100 * 18, 2))]:
+        if macros.get(nm) != exp:
+            bad.append(f"{nm}: {macros.get(nm)} vs {exp}")
+check("terminal SoC deficit expressed per vehicle (kWh, km, share of daily driving energy)", not bad, "; ".join(bad) if bad else "4 macros per split")
 # generated artefacts identical between code and manuscript folders
 def h_(p):
     return hashlib.md5(open(p, "rb").read()).hexdigest()
@@ -254,7 +355,7 @@ section("6. Manuscript text: literal numbers outside macros")
 WHITELIST = set("""0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 50 60 100 128 256 300 384 500
 0.01 0.02 0.03 0.05 0.06 0.08 0.1 0.15 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.92 0.94 0.95 0.965 1.0 1.05 1.035 1.1 1.2 1.3 1.6 2.0 4.0 5.0
 0.20 0.35 0.40 0.45 0.50 0.55 0.60 0.70 0.85 0.90 1.10 1.20 1.5 4.2 7.4 9 12.66 18 0.006 0.995 0.25 0.3 2.6 0.0 6144 50000 200000 400000 1989 2016
-00 06 09 15 21 1.2 3 10 40 400 80 33-bus 2026 0.10 05 3600 90 0.34 0.60 0.0 1.0 0.9 0.5 186 190 45 59 65 0.001 10.5281 23851585""".split())
+00 06 09 15 21 1.2 3 10 40 400 80 33-bus 2026 0.10 05 3600 90 0.34 0.60 0.0 1.0 0.9 0.5 186 190 45 59 65 0.001 10.5281 23851585 48""".split())
 txt = "".join(open(f"{MS}/{p}").read() for p in ["sec_abstract.tex", "sec_intro_methods.tex", "sec_results.tex"])
 txt = re.sub(r"%.*", "", txt)
 txt = re.sub(r"\\(cite|ref|eqref|label|includegraphics)(\[[^]]*\])?\{[^}]*\}", "", txt)

@@ -1,0 +1,29 @@
+\begin{table*}[!t]
+\caption{Feeder power flow under full activation of the committed reserve on the 30 test days (1440 area-hours per controller). Every hour is re-solved with the scheduled fleet power shifted by the full reserve in each direction. The band is 0.95 to 1.05~p.u. PPO values are the mean $\pm$ standard deviation over the five seeds. For reference, the substation current of the nominal Baran--Wu loading without PV or EVs is 0.210~kA.}
+\label{tab:activation}
+\centering
+\footnotesize
+\begin{tabular}{lccc}
+\toprule
+\textbf{Quantity} & \textbf{RB} & \textbf{DAO} & \textbf{PPO (proposed)}\\
+\midrule
+Area-hours outside the band at the schedule (\%) & 26.0 & 37.8 & 24.9 $\pm$ 2.2 \\
+Area-hours outside the band under full upward activation, $P^{\mathrm{set}}+R$ (\%) & 21.3 & 13.5 & 14.4 $\pm$ 0.3 \\
+Area-hours outside the band under full downward activation, $P^{\mathrm{set}}-R$ (\%) & 42.3 & 48.2 & 56.6 $\pm$ 0.4 \\
+Area-hours that leave the band only because of downward activation (\%) & 16.5 & 10.6 & 32.5 $\pm$ 2.6 \\
+Largest drop of the minimum voltage caused by downward activation (p.u.) & 0.035 & 0.031 & 0.064 $\pm$ 0.000 \\
+Largest rise of the maximum voltage caused by upward activation (p.u.) & 0.022 & 0.022 & 0.043 $\pm$ 0.000 \\
+Minimum voltage under downward activation (p.u.) & 0.859 & 0.910 & 0.884 $\pm$ 0.003 \\
+Maximum voltage under upward activation (p.u.) & 1.072 & 1.072 & 1.094 $\pm$ 0.004 \\
+Area-hours outside the band at the realized peak downward droop power (\%) & 27.2 & 41.9 & 34.2 $\pm$ 1.2 \\
+Area-hours that leave the band only because of the realized downward droop power (\%) & 1.2 & 4.2 & 9.6 $\pm$ 1.4 \\
+Largest drop of the minimum voltage caused by the realized downward droop power (p.u.) & 0.007 & 0.007 & 0.012 $\pm$ 0.000 \\
+Mean committed reserve per feeder (MW) & 0.30 & 0.28 & 0.51 $\pm$ 0.01 \\
+Realized peak droop power, mean over hours (\% of $R$) & 20.3 & 19.8 & 15.7 $\pm$ 0.2 \\
+Realized peak droop power, largest hour (\% of $R$) & 39.9 & 39.9 & 39.7 $\pm$ 0.8 \\
+Largest branch current at the schedule (kA) & 0.239 & 0.220 & 0.217 $\pm$ 0.000 \\
+Largest branch current under downward activation (kA) & 0.262 & 0.223 & 0.218 $\pm$ 0.002 \\
+Largest branch current under upward activation (kA) & 0.221 & 0.217 & 0.217 $\pm$ 0.000 \\
+\bottomrule
+\end{tabular}
+\end{table*}

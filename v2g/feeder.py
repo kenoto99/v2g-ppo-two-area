@@ -73,3 +73,21 @@ class RadialFeeder:
         loss_mw = float(np.sum(np.abs(i_br) ** 2 * self.r)) * S_BASE_MVA
         vm = np.concatenate([[self.v0], np.abs(v)])
         return vm, loss_mw
+
+    def branch_currents(self, p_mw, q_mvar, tol=1e-9, itmax=50):
+        """Same solution as solve(); returns (vm, loss_mw, |i_br| in p.u. of S_BASE/V_BASE).
+        Diagnostic only; solve() and all results built from it are unchanged."""
+        s = (p_mw + 1j * q_mvar)[1:] / S_BASE_MVA
+        v = np.full(self.nb - 1, self.v0 + 0j)
+        for _ in range(itmax):
+            i_inj = np.conj(s / v)
+            v_new = self.v0 - self.dlf @ i_inj
+            if np.max(np.abs(v_new - v)) < tol:
+                v = v_new
+                break
+            v = v_new
+        i_inj = np.conj(s / v)
+        i_br = self.bibc @ i_inj
+        loss_mw = float(np.sum(np.abs(i_br) ** 2 * self.r)) * S_BASE_MVA
+        vm = np.concatenate([[self.v0], np.abs(v)])
+        return vm, loss_mw, np.abs(i_br)

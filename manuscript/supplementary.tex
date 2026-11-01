@@ -72,12 +72,33 @@ $a_1$ \ClipAbovePsetOne\% / \ClipBelowPsetOne\%, $a_2$ \ClipAbovePsetTwo\% / \Cl
 $a_3$ \ClipAboveRhoOne\% / \ClipBelowRhoOne\%, $a_4$ \ClipAboveRhoTwo\% / \ClipBelowRhoTwo\%.
 Median excess beyond the bound when saturated: \ClipMedianExcess.
 
-\section*{S6. Remaining model assumptions}
+\section*{S6. Analyses added after the technical review of the revised manuscript}
+
+Three analyses were added in response to the technical review of the revised manuscript. They reuse the
+trained policies and the test-day scenarios of the main evaluation and add no new training run.
+\begin{itemize}
+\item \texttt{scripts/dao\_rho\_sweep.py} re-optimizes the day-ahead benchmark for reserve shares
+$\rho\in\{0.0,0.1,\dots,0.6\}$ on the test and stress days and reports a per-day oracle
+(Table~\ref{tab:daorho} of the manuscript). The $\rho=0.3$ row reproduces the DAO column of Table~\ref{tab:test}.
+\item \texttt{scripts/activation\_powerflow.py} re-solves every test-day hour at $P^{\mathrm{set}}\pm R$ and at the
+realized peak droop power of the simulated window and records voltages and branch currents
+(Table~\ref{tab:activation}). The schedule case reproduces the violation hours of Table~\ref{tab:test}.
+\item \texttt{scripts/chained\_days.py} runs the 30 test days back to back with the terminal fleet energy carried
+into the next day (Table~\ref{tab:chained}). Day 1 reproduces the first independent test day exactly.
+\end{itemize}
+The verification script checks each of these consistency conditions and recomputes the corresponding macros.
+
+\section*{S7. Remaining model assumptions}
 
 Each area is represented by 25 identical copies of one IEEE 33-bus feeder; the fleet of each feeder is one
-aggregated battery with a single SoC; charger reactive power is not used; the LFC model is linear with
+aggregated battery with a single SoC, so SoC dispersion and the reduced deliverable power of vehicles at
+their limits are not represented; charger reactive power is not used; chargers are a first-order lag with
+saturation, without current limits or control-loop dynamics; communication delays between the aggregator and
+the chargers are not modeled; all chargers and vehicles are identical; LFC and fleet parameters are fixed at
+representative values and were not varied in training or testing; the LFC model is linear with
 representative parameters; load, PV and availability profiles are synthetic and shaped after published
-measurements; hour-ahead forecasts are assumed exact; the fast layer of each hour is a 60-s window containing
+measurements; hour-ahead forecasts are assumed exact; the terminal SoC requirement is a soft penalty, and consecutive-day
+operation shows a downward drift of the residential fleet energy for every controller (Table~\ref{tab:chained}); the fast layer of each hour is a 60-s window containing
 one step event and a fluctuating component, and the regulation energy of the remaining 59 minutes is obtained
 from a second fluctuation-only window (checked against exact 3600-s simulations); the throughput term is a
 linear proxy for degradation; the weights of the reward were chosen by the authors and their effect is shown

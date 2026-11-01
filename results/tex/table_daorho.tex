@@ -1,0 +1,21 @@
+\begin{table*}[!t]
+\caption{Reserve-share sweep of the day-ahead optimization baseline on the test and stress days. For each fixed share $\rho$ the 24 hourly set-points of each area are re-optimized as in Section~\ref{sec:bench}; the oracle row picks, for every day separately, the share with the lowest realized cost and is therefore an upper bound on a DAO with a tuned reserve share. Test-day columns are means over 30 days (cost: mean $\pm$ standard deviation); PPO values are pooled over the five seeds.}
+\label{tab:daorho}
+\centering
+\footnotesize
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Reserve share $\rho$} & \textbf{Test cost} & \textbf{Undervoltage (p.u.$\cdot$h)} & \textbf{Mean nadir (mHz)} & \textbf{SoC deficit (\%)} & \textbf{Reserve (MW)} & \textbf{Stress cost}\\
+\midrule
+0.0 & 159.8 $\pm$ 29.7 & 0.84 & 54.4 & 13.51 & 0.0 & 298.7 $\pm$ 14.4 \\
+0.1 & 155.8 $\pm$ 30.5 & 0.90 & 52.7 & 11.59 & 4.4 & 301.6 $\pm$ 15.9 \\
+0.2 & 155.3 $\pm$ 31.7 & 0.95 & 51.3 & 12.72 & 8.8 & 303.4 $\pm$ 18.4 \\
+0.3 & 152.3 $\pm$ 31.8 & 1.04 & 49.8 & 9.68 & 13.9 & 308.3 $\pm$ 19.6 \\
+0.4 & 151.2 $\pm$ 31.5 & 1.15 & 48.3 & 7.58 & 19.4 & 310.5 $\pm$ 17.8 \\
+0.5 & 152.7 $\pm$ 32.2 & 1.29 & 46.9 & 6.09 & 24.9 & 316.8 $\pm$ 17.3 \\
+0.6 & 157.7 $\pm$ 34.6 & 1.47 & 45.7 & 5.30 & 30.4 & 327.8 $\pm$ 17.6 \\
+per-day best (oracle) & 148.6 $\pm$ 28.9 & -- & -- & -- & -- & 296.6 $\pm$ 15.1 \\
+PPO (proposed) & 135.5 $\pm$ 26.0 & 0.90 & 47.3 & 6.31 & 25.3 & 283.8 $\pm$ 16.2 \\
+\bottomrule
+\end{tabular}
+\end{table*}

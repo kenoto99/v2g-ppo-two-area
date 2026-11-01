@@ -324,6 +324,167 @@ learning, vehicle-to-grid, voltage regulation.
 seeded rollout of an untrained policy. The new results are from
 trained policies evaluated on unseen days.
 
+
+\section*{Additional changes made after a technical review of the revised manuscript}
+
+Before resubmission the revised manuscript was examined by an
+independent technical reviewer, whose eight comments are addressed
+below. The analyses added in response reuse the trained policies and
+the test-day scenarios; no training run was repeated. The author list
+was also updated with the agreement of all authors: Wasan Phetphimoon
+is no longer an author, and Kritphon Phanrattanachai (Phetchabun
+Rajabhat University) was added as the sixth author.
+
+\rc{A.1} \emph{Fairness of the comparison with DAO: PPO adjusts both
+the V2G power and the reserve share, whereas DAO fixes the share at
+0.3 and does not optimize the frequency part.}
+
+\resp We agree that the fixed share could have favored PPO. The
+benchmark was therefore re-optimized for every share
+$\rho\in\{0,0.1,\dots,0.6\}$ on the same test and stress days, and a
+per-day oracle (the share with the lowest realized cost on each day,
+an upper bound on any tuned fixed share) was added. The fixed share
+used before was close to, but not at, the best fixed share
+($\rho=\DaoRhoBest$); PPO remains \RedCostDaoRhoBest\% below the best
+fixed share and \RedCostDaoOracle\% below the oracle on the test days
+(lower on \WinsDaoOracle{} of 30 days, $p=\PDaoOracle$) and
+\RedCostDaoOracleS\% below it on the stress days. The sweep also shows
+the trade-off that no fixed share resolves (nadir improves and
+undervoltage worsens with $\rho$), which PPO avoids by moving the share
+hour by hour. The structural difference between the two controllers
+(DAO's objective excludes the frequency terms) is now stated
+explicitly.
+
+\chg Section~\ref{sec:bench} (last paragraph); new
+Section~\ref{sec:daorho} and Table~\ref{tab:daorho}; Conclusion.
+
+\rc{A.2} \emph{The daily cost of Table~\ref{tab:test} is a weighted sum
+of technical penalties, not an economic cost; its meaning and units
+should be stated before relative reductions are interpreted.}
+
+\resp The quantity is now defined as the daily performance cost, a
+dimensionless weighted penalty with no price, reserve payment, or
+degradation cost, in Section~\ref{sec:reward}; the table row, the
+learning-curve axis, the first sentence of
+Section~\ref{sec:testres}, and the abstract say so, and the relative
+reductions are described as relative technical penalty under the
+chosen weights.
+
+\chg Section~\ref{sec:reward} (new last paragraph); abstract;
+Section~\ref{sec:testres}; row label of Tables~\ref{tab:test} and
+\ref{tab:stress}; Fig.~\ref{fig:learning}.
+
+\rc{A.3} \emph{The voltage results do not meet the band in every hour
+(PPO minimum voltage \TPPOVminDay~p.u., \TPPOViolHours{} violation hours
+per day); this should be presented as a reduction of severity, not a
+guarantee.}
+
+\resp Agreed. The voltage paragraph of Section~\ref{sec:testres} now
+states that the results are a reduction in depth and duration of
+undervoltage and not compliance in every hour, gives the number of
+area-hours that remain outside the band, and explains why the feeder
+itself sets the floor (nominal Baran--Wu minimum of \ValVmin~p.u.\
+with no EVs; the smallest plugged-in fleet during the evening peak).
+The abstract and the conclusion carry the same qualification.
+
+\chg Section~\ref{sec:testres}, paragraph \emph{Voltage}; abstract;
+Conclusion.
+
+\rc{A.4} \emph{Terminal SoC deficit (\TPPOSocDefPct\% on test days,
+\SPPOSocDefPct\% on stress days): explain the consequence for driving
+energy and consider a hard terminal constraint or consecutive-day
+tests.}
+
+\resp The deficit is now translated into energy per vehicle
+(\TPPOSocDefKwhVeh~kWh, about \TPPOSocDefKm~km or \TPPOSocDefDrivePct\%
+of a day's driving energy on the test days), and the unmet mobility
+energy of the day is reported alongside. More importantly, the 30 test
+days were run consecutively with the terminal energy carried over
+(new Table~\ref{tab:chained}). Costs rise for all controllers, and the
+residential fleet drifts to a lower SoC over the month with all three;
+PPO degrades least (unmet mobility energy \ChPPOUnmetMwhTotal~MWh on
+\ChPPOUnmetDays{} days, against \ChDAOUnmetMwhTotal~MWh on
+\ChDAOUnmetDays{} days for DAO), but the drift shows that the soft
+terminal penalty does not guarantee a sustainable energy state. We
+state this plainly, identify the hard terminal constraint (constrained
+RL or a projection at the last plugged-in hours) as the remedy, and
+did not implement it in this revision.
+
+\chg Section~\ref{sec:testres}, paragraph \emph{Energy and fleet};
+new Table~\ref{tab:chained}; Conclusion; Supplementary S6 and S7.
+
+\rc{A.5} \emph{Limits of the aggregated EV model: how are parked and
+driving vehicles separated, and how does the single-SoC assumption
+affect deliverable power?}
+
+\resp Section~\ref{sec:fleet} now explains that the aggregation
+separates parked and driving vehicles in power (through the plugged-in
+fraction) but not in energy (driving energy is withdrawn from the
+common store while vehicles are away), that all plugged-in vehicles
+are assumed to share the fleet-average SoC, and that the
+energy-feasible limits are exact for the aggregate but optimistic
+for the deliverable power of a dispersed fleet near its SoC limits,
+most of all at the end of the evening discharge. A vehicle-level
+allocation layer is listed as future work.
+
+\chg Section~\ref{sec:fleet}; Section~\ref{sec:limits} item (iii);
+Supplementary S7.
+
+\rc{A.6} \emph{Coupling between the frequency reserve and the feeder
+power flow: when reserve is activated, do feeder voltages and currents
+stay within limits?}
+
+\resp This was not checked before and the check changes the picture.
+Every test-day hour was re-solved at $P^{\mathrm{set}}\pm R$ and at the
+realized peak droop power (new Section~\ref{sec:activation} and
+Table~\ref{tab:activation}). Upward activation helps the voltage;
+full downward activation (the fleet absorbing the whole reserve)
+would take \ActPPONewViolFracDown\% of the PPO area-hours that are
+inside the band at the schedule out of it, with a minimum voltage of
+\ActPPOVminDown~p.u. The simulated disturbances never reach that
+level: the realized peak droop power averages \ActPPOPeakActFracMean\%
+of the committed reserve, at which \ActPPONewViolFracDownreal\% of the
+area-hours leave the band for a few seconds, with an additional drop
+of at most \ActPPODvminDownrealMax~p.u. Branch currents change little
+and the case data carry no thermal rating. The exposure is small for
+the modeled disturbance class but real and growing with the committed
+reserve, so we report it as a limitation and identify a voltage-aware
+(asymmetric) reserve rule as the remedy.
+
+\chg New Section~\ref{sec:activation} and Table~\ref{tab:activation};
+Conclusion; Supplementary S6.
+
+\rc{A.7} \emph{Effect of raw-action saturation (\ClipDimAll\%) on
+exploration, gradients, and transfer; limits of the squashed-policy
+comparison.}
+
+\resp Section~\ref{sec:clip} now discusses the three effects
+separately (exploration collapses to the boundary action, the
+likelihood-ratio update keeps pushing the mean outward with no
+corrective signal from the environment, and a saturated output is
+benign only while the deployed limits coincide with the training
+limits) and states the limits of the squashed-policy comparison
+(three seeds, half budget, different exploration mechanism, no
+re-tuning, one parameterization), so that it is read as "the bounded
+variant we tried did not help under equal conditions" rather than as
+a general statement.
+
+\chg Section~\ref{sec:clip}, two paragraphs.
+
+\rc{A.8} \emph{Realism and scope: discuss forecast errors,
+communication delay, charger heterogeneity, converter dynamics, and
+parameter uncertainty.}
+
+\resp The Limitations section now has a dedicated paragraph with
+these five items, each with its consequence for the reported results
+and the step needed before field use (training on forecast errors,
+delays, and parameter ranges; a vehicle-level dispatch layer; a fuller
+converter model). The stress days are explicitly described as varying
+load, participation, and disturbance level but not forecast accuracy.
+
+\chg Section~\ref{sec:limits} (new paragraph, items (i) to (v));
+Conclusion; Supplementary S7.
+
 We thank the reviewers again. Their comments led to a substantially
 stronger study.
 

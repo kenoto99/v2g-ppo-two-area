@@ -244,7 +244,26 @@ eMotion field data \cite{Donati2015}. The driving energy is distributed
 over the hours in which the vehicle is away in proportion to the
 unplugged fraction. The fleet is
 treated as one aggregated battery with energy capacity
-$E^{\mathrm{cap}}=18$~MWh per feeder. The plugged-in rating is
+$E^{\mathrm{cap}}=18$~MWh per feeder, in the spirit of the aggregate
+EV models of \cite{Izadkhast2015,Izadkhast2016}. The aggregation
+separates the parked and the driving part of the fleet in power but
+not in energy: the plugged-in fraction $\chi_{i,t}$ scales the
+converter rating available to the grid, while the driving energy of
+the vehicles that are away is withdrawn from the common energy store
+in the hours in which they are absent. All plugged-in vehicles are
+thereby assumed to share the fleet-average SoC. In a real fleet the
+SoC is dispersed, so part of the plugged-in vehicles sit at a limit
+and cannot deliver their share of the aggregate power, and the
+vehicles that return from a trip arrive with less energy than the
+average. The energy-feasible limits \eqref{eq:pdis} and
+\eqref{eq:pch} are therefore exact for the aggregate but
+optimistic for the deliverable power of an individual-vehicle fleet
+near the SoC limits; the discrepancy grows with the SoC dispersion
+and is largest at the end of the evening discharge, when the
+aggregate approaches $E^{\min}$. A vehicle-level dispatch that
+allocates the aggregate set-point to individual vehicles with their
+own SoC and departure times, and the resulting loss of deliverable
+power, are not modeled here and are listed among the limitations. The plugged-in rating is
 \begin{equation}
 P^{\mathrm{rate}}_{i,t}=\chi_{i,t}\,\kappa_i\,N_{\mathrm{EV}}\,P_{\mathrm{ch}},
 \label{eq:prate}
@@ -522,6 +541,17 @@ were chosen so that a typical uncontrolled day produces voltage and
 frequency costs of the same order of magnitude; Section~\ref{sec:ablation}
 reports the effect of removing individual terms.
 
+The daily sum $C=\sum_{t}c_t$ is referred to as the daily performance
+cost. It is a dimensionless weighted sum of technical penalties
+(voltage-band violations, frequency nadir, tie-line deviation, battery
+throughput, unmet mobility energy, and terminal SoC deficit) and not
+an economic cost in currency units; no electricity price, reserve
+payment, or degradation cost is included. Relative differences in $C$
+between controllers therefore measure relative technical penalty
+under the chosen weights, and Section~\ref{sec:ablation} shows how
+they move when the weights change. An economic objective would
+require a market model and is left to future work.
+
 \subsection{PPO Training}
 \label{sec:ppo}
 
@@ -582,7 +612,16 @@ raising the limit to 80 iterations did not change the solution, but
 the method is local and the schedule is not guaranteed to be globally
 optimal. DAO serves as an informed benchmark for the voltage and
 energy part of the problem; it does not optimize the reserve
-allocation.
+allocation, and its objective omits the frequency terms of
+\eqref{eq:cost} because the fast layer is not available to a
+day-ahead schedule. The comparison with PPO is therefore between a
+controller that decides both the set-point and the reserve share and
+a benchmark that decides only the set-point under a fixed share. To
+make sure that this difference, rather than an unfortunate choice of
+the fixed share, does not drive the conclusions, the benchmark is
+re-optimized for every share $\rho\in\{0,0.1,\dots,0.6\}$ and compared
+with a per-day oracle choice of the share in
+Section~\ref{sec:daorho}.
 
 \subsection{Evaluation Protocol and Metrics}
 \label{sec:protocol}

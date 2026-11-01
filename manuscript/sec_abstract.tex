@@ -16,11 +16,14 @@ trained with \NSeed{} independent seeds on randomized load, solar, fleet,
 and disturbance scenarios and compared with uncontrolled charging, a
 rule-based volt-watt and droop controller, and a day-ahead optimization
 with perfect foresight, all simulated under identical conditions. On 30
-held-out days, PPO lowers the daily operating cost by \TRedCostDAO\%,
+held-out days, PPO lowers the daily performance cost, a dimensionless
+weighted penalty on voltage, frequency, throughput, and energy terms, by \TRedCostDAO\%,
 \TRedCostRB\%, and \TRedCostUC\% relative to these benchmarks, reduces
 undervoltage by \TRedUvPuHDAO\% and the mean frequency nadir by
 \TRedNadirMeanHzDAO\% relative to the day-ahead optimization, and leaves
-a smaller end-of-day energy deficit than both. The learned policy holds
+a smaller end-of-day energy deficit than both, although some hours of
+the weak residential feeder remain below the 0.95-p.u.\ limit with
+every controller. The learned policy holds
 reserve mainly where and when vehicles are plugged in, including
 low-inertia midday hours, and releases it when converter capacity is
 needed for voltage support. The energy exchanged by the frequency

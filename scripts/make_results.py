@@ -34,7 +34,7 @@ def cost(split, ctrl):
 
 
 METRICS = [  # key, label, scale, decimals
-    ("COST", "Daily cost $\\sum_t c_t$", 1, 1),
+    ("COST", "Daily performance cost $\\sum_t c_t$ (dimensionless)", 1, 1),
     ("viol_hours", "Voltage-violation hours (h)", 1, 1),
     ("uv_pu_h", "Undervoltage (p.u.$\\cdot$h)", 1, 2),
     ("ov_pu_h", "Overvoltage (p.u.$\\cdot$h)", 1, 3),
@@ -156,7 +156,7 @@ for X, lab, col, ls in [(T, "PPO, training episodes", "#6250d6", "--"), (V, "PPO
     ax.fill_between(k, m - s, m + s, color=col, alpha=0.18, lw=0)
 for c in ["UC", "RB", "DAO"]:
     ax.axhline(cost("val", c).mean(), color=STYLE[c]["color"], ls=STYLE[c]["ls"], lw=1.0, label=f"{c}, validation days")
-ax.set_xlabel("Environment steps ($\\times 10^3$)"); ax.set_ylabel("Daily cost")
+ax.set_xlabel("Environment steps ($\\times 10^3$)"); ax.set_ylabel("Daily performance cost")
 ax.set_xlim(0, k[-1]); ax.set_ylim(100, 560)
 ax.legend(fontsize=6, ncol=1, loc="center right", bbox_to_anchor=(1.0, 0.62))
 save(fig, "fig_learning")
@@ -581,6 +581,135 @@ if cs_ is not None:
            "\\textbf{All} & \\textbf{Cost} & \\textbf{UV (p.u.$\\cdot$h)} & \\textbf{Nadir (mHz)} & \\textbf{Reserve (MW)} & \\textbf{SoC def. (\\%)}\\\\\n\\midrule\n"
            + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n\\end{table*}\n")
     open(f"{OUT}/table_clip.tex", "w").write(txt)
+
+
+# ---- reserve-share sweep of the DAO baseline (scripts/dao_rho_sweep.py)
+RHO_FILES = sorted(glob.glob("results/eval/dao_rho/rho_*.json"))
+if RHO_FILES:
+    sweep = {float(os.path.basename(p_)[4:-5]): json.load(open(p_)) for p_ in RHO_FILES}
+    rhos = sorted(sweep)
+    def sw(rho, split, key):
+        return np.array([(-10 * d["reward"] if key == "COST" else d[key]) for d in sweep[rho][split]])
+    rows = []
+    for rho in rhos:
+        ct, cs = sw(rho, "test", "COST"), sw(rho, "stress", "COST")
+        rows.append(f"{rho:.1f} & {fmt(ct.mean(), 1)} $\\pm$ {fmt(ct.std(ddof=1), 1)} & {fmt(sw(rho, 'test', 'uv_pu_h').mean(), 2)} & "
+                    f"{fmt(sw(rho, 'test', 'nadir_mean_hz').mean() * 1e3, 1)} & {fmt(sw(rho, 'test', 'soc_def_pct').mean(), 2)} & "
+                    f"{fmt(sw(rho, 'test', 'reserve_mean_mw').mean(), 1)} & {fmt(cs.mean(), 1)} $\\pm$ {fmt(cs.std(ddof=1), 1)} \\\\")
+    # per-day oracle: best share chosen with knowledge of the realised day
+    orc_t = np.min([sw(r_, "test", "COST") for r_ in rhos], axis=0); orc_s = np.min([sw(r_, "stress", "COST") for r_ in rhos], axis=0)
+    rows.append(f"per-day best (oracle) & {fmt(orc_t.mean(), 1)} $\\pm$ {fmt(orc_t.std(ddof=1), 1)} & -- & -- & -- & -- & "
+                f"{fmt(orc_s.mean(), 1)} $\\pm$ {fmt(orc_s.std(ddof=1), 1)} \\\\")
+    pt, ps_ = cost("test", "PPO"), cost("stress", "PPO")
+    rows.append(f"PPO (proposed) & {fmt(pt.mean(), 1)} $\\pm$ {fmt(pt.reshape(-1).std(ddof=1), 1)} & {fmt(get('test','PPO','uv_pu_h').mean(), 2)} & "
+                f"{fmt(get('test','PPO','nadir_mean_hz').mean() * 1e3, 1)} & {fmt(get('test','PPO','soc_def_pct').mean(), 2)} & "
+                f"{fmt(get('test','PPO','reserve_mean_mw').mean(), 1)} & {fmt(ps_.mean(), 1)} $\\pm$ {fmt(ps_.reshape(-1).std(ddof=1), 1)} \\\\")
+    txt = ("\\begin{table*}[!t]\n\\caption{Reserve-share sweep of the day-ahead optimization baseline on the test and stress days. "
+           "For each fixed share $\\rho$ the 24 hourly set-points of each area are re-optimized as in Section~\\ref{sec:bench}; "
+           "the oracle row picks, for every day separately, the share with the lowest realized cost and is therefore an upper bound on "
+           "a DAO with a tuned reserve share. Test-day columns are means over 30 days (cost: mean $\\pm$ standard deviation); "
+           "PPO values are pooled over the five seeds.}\n\\label{tab:daorho}\n\\centering\n\\footnotesize\n"
+           "\\begin{tabular}{lcccccc}\n\\toprule\n\\textbf{Reserve share $\\rho$} & \\textbf{Test cost} & \\textbf{Undervoltage (p.u.$\\cdot$h)} & "
+           "\\textbf{Mean nadir (mHz)} & \\textbf{SoC deficit (\\%)} & \\textbf{Reserve (MW)} & \\textbf{Stress cost}\\\\\n\\midrule\n"
+           + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n\\end{table*}\n")
+    open(f"{OUT}/table_daorho.tex", "w").write(txt)
+    means_t = {r_: sw(r_, "test", "COST").mean() for r_ in rhos}
+    rb_ = min(means_t, key=means_t.get)
+    mac["DaoRhoBest"] = f"{rb_:.1f}"; setm("DaoRhoBestCost", means_t[rb_], 1)
+    setm("DaoRhoOracleCost", orc_t.mean(), 1); setm("DaoRhoOracleCostS", orc_s.mean(), 1)
+    setm("DaoRhoMinCost", min(means_t.values()), 1); setm("DaoRhoMaxCost", max(means_t.values()), 1)
+    setm("RedCostDaoRhoBest", (1 - pt.mean() / means_t[rb_]) * 100, 1)
+    setm("RedCostDaoOracle", (1 - pt.mean() / orc_t.mean()) * 100, 1)
+    setm("RedCostDaoOracleS", (1 - ps_.mean() / orc_s.mean()) * 100, 1)
+    setm("DaoRhoZeroNadir", sw(0.0, "test", "nadir_mean_hz").mean() * 1e3, 1)
+    setm("DaoRhoZeroUv", sw(0.0, "test", "uv_pu_h").mean(), 2)
+    setm("DaoRhoBestUv", sw(rb_, "test", "uv_pu_h").mean(), 2)
+    setm("DaoRhoBestNadir", sw(rb_, "test", "nadir_mean_hz").mean() * 1e3, 1)
+    setm("DaoRhoBestSocDef", sw(rb_, "test", "soc_def_pct").mean(), 2)
+    # paired test: PPO seed-mean daily cost against the oracle DAO
+    pv_ = wilcoxon(pt.mean(axis=0), orc_t).pvalue
+    mac["PDaoOracle"] = f"{pv_:.1e}".replace("e-0", "\\times10^{-").replace("e-", "\\times10^{-") + "}"
+    mac["WinsDaoOracle"] = str(int(np.sum(pt.mean(axis=0) < orc_t)))
+
+# ---- feeder power flow under full reserve activation (scripts/activation_powerflow.py)
+if os.path.exists("results/eval/activation_pf.json"):
+    A = json.load(open("results/eval/activation_pf.json"))
+    ROWS = [("Area-hours outside the band at the schedule (\\%)", "viol_frac_sched", 100, 1),
+            ("Area-hours outside the band under full upward activation, $P^{\\mathrm{set}}+R$ (\\%)", "viol_frac_up", 100, 1),
+            ("Area-hours outside the band under full downward activation, $P^{\\mathrm{set}}-R$ (\\%)", "viol_frac_down", 100, 1),
+            ("Area-hours that leave the band only because of downward activation (\\%)", "new_viol_frac_down", 100, 1),
+            ("Largest drop of the minimum voltage caused by downward activation (p.u.)", "dvmin_down_max", 1, 3),
+            ("Largest rise of the maximum voltage caused by upward activation (p.u.)", "dvmax_up_max", 1, 3),
+            ("Minimum voltage under downward activation (p.u.)", "vmin_down", 1, 3),
+            ("Maximum voltage under upward activation (p.u.)", "vmax_up", 1, 3),
+            ("Area-hours outside the band at the realized peak downward droop power (\\%)", "viol_frac_downreal", 100, 1),
+            ("Area-hours that leave the band only because of the realized downward droop power (\\%)", "new_viol_frac_downreal", 100, 1),
+            ("Largest drop of the minimum voltage caused by the realized downward droop power (p.u.)", "dvmin_downreal_max", 1, 3),
+            ("Mean committed reserve per feeder (MW)", "res_mean_mw", 1, 2),
+            ("Realized peak droop power, mean over hours (\\% of $R$)", "peak_act_frac_mean", 100, 1),
+            ("Realized peak droop power, largest hour (\\% of $R$)", "peak_act_frac_max", 100, 1),
+            ("Largest branch current at the schedule (kA)", "imax_sched_ka", 1, 3),
+            ("Largest branch current under downward activation (kA)", "imax_down_ka", 1, 3),
+            ("Largest branch current under upward activation (kA)", "imax_up_ka", 1, 3)]
+    rows = []
+    for lab, k, sc, d in ROWS:
+        cells = [fmt(A[c][k] * sc, d) for c in ("RB", "DAO")]
+        cells.append(f"{fmt(A['PPO'][k] * sc, d)} $\\pm$ {fmt(A['PPO_sd'][k] * sc, d)}")
+        rows.append(lab + " & " + " & ".join(cells) + " \\\\")
+        nm = "".join(w.title() for w in k.split("_")).replace("1", "One").replace("2", "Two")
+        for c in ("RB", "DAO", "PPO"):
+            setm(f"Act{c}{nm}", A[c][k] * sc, d)
+    setm("ActRefIsub", A["reference"]["isub_nominal_ka"], 3)
+    txt = ("\\begin{table*}[!t]\n\\caption{Feeder power flow under full activation of the committed reserve on the 30 test days "
+           "(1440 area-hours per controller). Every hour is re-solved with the scheduled fleet power shifted by the full reserve in each "
+           "direction. The band is 0.95 to 1.05~p.u. PPO values are the mean $\\pm$ standard deviation over the five seeds. "
+           "For reference, the substation current of the nominal Baran--Wu loading without PV or EVs is " + fmt(A["reference"]["isub_nominal_ka"], 3) + "~kA.}\n"
+           "\\label{tab:activation}\n\\centering\n\\footnotesize\n\\begin{tabular}{lccc}\n\\toprule\n"
+           "\\textbf{Quantity} & \\textbf{RB} & \\textbf{DAO} & \\textbf{PPO (proposed)}\\\\\n\\midrule\n"
+           + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n\\end{table*}\n")
+    open(f"{OUT}/table_activation.tex", "w").write(txt)
+
+
+# ---- consecutive-day evaluation with carried-over energy (scripts/chained_days.py)
+if os.path.exists("results/eval/chained_days.json"):
+    CH = json.load(open("results/eval/chained_days.json"))
+    ROWS = [("Daily performance cost, 30 consecutive days", "cost_mean", 1, 1),
+            ("Terminal SoC deficit, mean per day (\\%)", "soc_def_pct_mean", 1, 2),
+            ("Area-1 terminal SoC after day 1", "soc_end_first_1", 1, 3),
+            ("Area-1 terminal SoC after day 30", "soc_end_final_1", 1, 3),
+            ("Area-2 terminal SoC after day 1", "soc_end_first_2", 1, 3),
+            ("Area-2 terminal SoC after day 30", "soc_end_final_2", 1, 3),
+            ("Lowest terminal SoC of any area and day", "soc_end_min", 1, 3),
+            ("Days with unmet mobility energy (of 30)", "unmet_days", 1, 1),
+            ("Unmet mobility energy over 30 days (MWh, area level)", "unmet_mwh_total", 1, 1),
+            ("Undervoltage, mean per day (p.u.$\\cdot$h)", "uv_pu_h_mean", 1, 2)]
+    rows = []
+    for lab, k, sc, d in ROWS:
+        cells = [fmt(CH[c][k] * sc, d) for c in ("RB", "DAO")]
+        cells.append(f"{fmt(CH['PPO'][k] * sc, d)} $\\pm$ {fmt(CH['PPO_sd'][k] * sc, d)}")
+        rows.append(lab + " & " + " & ".join(cells) + " \\\\")
+        nm = "".join(w.title() for w in k.split("_")).replace("1", "One").replace("2", "Two")
+        for c in ("RB", "DAO", "PPO"):
+            setm(f"Ch{c}{nm}", CH[c][k] * sc, d)
+        setm(f"ChPPO{nm}Sd", CH["PPO_sd"][k] * sc, d)
+    setm("ChPPOCostRise", (CH["PPO"]["cost_mean"] / cost("test", "PPO").mean() - 1) * 100, 1)
+    setm("ChDAOCostRise", (CH["DAO"]["cost_mean"] / cost("test", "DAO").mean() - 1) * 100, 1)
+    setm("ChRBCostRise", (CH["RB"]["cost_mean"] / cost("test", "RB").mean() - 1) * 100, 1)
+    setm("ChRedCostDAO", (1 - CH["PPO"]["cost_mean"] / CH["DAO"]["cost_mean"]) * 100, 1)
+    txt = ("\\begin{table}[!t]\n\\caption{The 30 test days run consecutively with the terminal fleet energy of each day carried into "
+           "the next (no reset of the SoC). Load, PV, availability, and disturbances are identical to Table~\\ref{tab:test}. "
+           "PPO values are the mean $\\pm$ standard deviation over the five seeds.}\n\\label{tab:chained}\n\\centering\n\\footnotesize\n"
+           "\\begin{tabular}{p{3.6cm}ccc}\n\\toprule\n\\textbf{Quantity} & \\textbf{RB} & \\textbf{DAO} & \\textbf{PPO}\\\\\n\\midrule\n"
+           + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n\\end{table}\n")
+    open(f"{OUT}/table_chained.tex", "w").write(txt)
+# ---- terminal SoC deficit expressed per vehicle
+n_ev, cap_kwh, drive_kwh, wh_km = 300, 60, 9.0, 190.0
+for S, split in [("T", "test"), ("S", "stress")]:
+    d_pct = get(split, "PPO", "soc_def_pct").mean()            # summed over the two areas
+    kwh_veh = d_pct / 100 * n_ev * cap_kwh / (2 * n_ev)        # per vehicle averaged over both fleets
+    setm(f"{S}PPOSocDefKwhVeh", kwh_veh, 1); setm(f"{S}PPOSocDefKm", kwh_veh * 1e3 / wh_km, 0)
+    setm(f"{S}PPOSocDefDrivePct", kwh_veh / drive_kwh * 100, 0)
+    setm(f"{S}PPOSocDefMwh", d_pct / 100 * n_ev * cap_kwh / 1e3, 2)
 
 val = json.load(open("results/validation.json"))
 setm("ValVmin", val["bfs_base_vmin_pu"], 4); setm("ValLoss", val["bfs_base_loss_kw"], 2)

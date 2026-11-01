@@ -1,0 +1,22 @@
+\begin{table}[!t]
+\caption{The 30 test days run consecutively with the terminal fleet energy of each day carried into the next (no reset of the SoC). Load, PV, availability, and disturbances are identical to Table~\ref{tab:test}. PPO values are the mean $\pm$ standard deviation over the five seeds.}
+\label{tab:chained}
+\centering
+\footnotesize
+\begin{tabular}{p{3.6cm}ccc}
+\toprule
+\textbf{Quantity} & \textbf{RB} & \textbf{DAO} & \textbf{PPO}\\
+\midrule
+Daily performance cost, 30 consecutive days & 249.4 & 179.9 & 143.3 $\pm$ 1.6 \\
+Terminal SoC deficit, mean per day (\%) & 6.28 & 1.21 & 5.48 $\pm$ 0.26 \\
+Area-1 terminal SoC after day 1 & 0.546 & 0.565 & 0.578 $\pm$ 0.018 \\
+Area-1 terminal SoC after day 30 & 0.261 & 0.220 & 0.372 $\pm$ 0.024 \\
+Area-2 terminal SoC after day 1 & 0.610 & 0.533 & 0.602 $\pm$ 0.006 \\
+Area-2 terminal SoC after day 30 & 0.680 & 0.577 & 0.774 $\pm$ 0.084 \\
+Lowest terminal SoC of any area and day & 0.200 & 0.219 & 0.277 $\pm$ 0.025 \\
+Days with unmet mobility energy (of 30) & 21.0 & 24.0 & 8.2 $\pm$ 3.0 \\
+Unmet mobility energy over 30 days (MWh, area level) & 662.2 & 108.8 & 13.9 $\pm$ 7.5 \\
+Undervoltage, mean per day (p.u.$\cdot$h) & 2.91 & 1.74 & 1.01 $\pm$ 0.03 \\
+\bottomrule
+\end{tabular}
+\end{table}
