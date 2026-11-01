@@ -1,0 +1,36 @@
+\begin{longtable}{llrrrrr}
+\caption{All training runs (final model version v3).}\label{tab:s_runs}\\
+\toprule
+\textbf{Run} & \textbf{Steps} & \textbf{Reward config} & \textbf{Final val. cost} & \textbf{Best val. cost} & \textbf{Change, last 50k (\%)} & \textbf{Wall (min)}\\
+\midrule
+\endhead
+ppo\_main\_s0 & 400k & nominal & 136.8 & 136.6 & 0.1 & 27 \\
+ppo\_main\_s1 & 400k & nominal & 138.3 & 138.3 & 1.0 & 27 \\
+ppo\_main\_s2 & 400k & nominal & 136.8 & 136.8 & 0.8 & 36 \\
+ppo\_main\_s3 & 400k & nominal & 136.5 & 136.4 & 0.0 & 36 \\
+ppo\_main\_s4 & 400k & nominal & 140.2 & 139.6 & 0.2 & 27 \\
+ppo\_noDeg\_s0 & 200k & {'w\_deg': 0.0} & 137.5 & 135.8 & 0.4 & 12 \\
+ppo\_noDeg\_s1 & 200k & {'w\_deg': 0.0} & 155.4 & 155.4 & 5.3 & 12 \\
+ppo\_noDeg\_s2 & 200k & {'w\_deg': 0.0} & 138.2 & 137.1 & 3.1 & 12 \\
+ppo\_noF\_s0 & 200k & {'w\_f': 0.0, 'w\_tie': 0.0} & 81.0 & 80.2 & 0.4 & 13 \\
+ppo\_noF\_s1 & 200k & {'w\_f': 0.0, 'w\_tie': 0.0} & 81.3 & 81.3 & 0.7 & 14 \\
+ppo\_noF\_s2 & 200k & {'w\_f': 0.0, 'w\_tie': 0.0} & 81.8 & 80.0 & 0.8 & 12 \\
+ppo\_noOV\_s0 & 200k & {'w\_ov': 0.0} & 143.4 & 142.8 & 7.8 & 29 \\
+ppo\_noOV\_s1 & 200k & {'w\_ov': 0.0} & 153.8 & 153.8 & 9.0 & 22 \\
+ppo\_noOV\_s2 & 200k & {'w\_ov': 0.0} & 144.3 & 143.8 & 11.4 & 14 \\
+ppo\_ref200\_s0 & 200k & nominal & 143.3 & 142.1 & 4.9 & 25 \\
+ppo\_ref200\_s1 & 200k & nominal & 161.9 & 161.9 & 4.0 & 29 \\
+ppo\_ref200\_s2 & 200k & nominal & 144.7 & 144.2 & 10.8 & 23 \\
+ppo\_squash\_s0 & 200k & nominal, squashed & 178.2 & 177.7 & 0.2 & 15 \\
+ppo\_squash\_s1 & 200k & nominal, squashed & 178.5 & 178.2 & 0.4 & 14 \\
+ppo\_squash\_s2 & 200k & nominal, squashed & 177.9 & 177.5 & 0.0 & 27 \\
+ppo\_wF2\_s0 & 200k & {'w\_f': 2.0} & 119.3 & 119.3 & 4.8 & 19 \\
+ppo\_wF2\_s1 & 200k & {'w\_f': 2.0} & 126.2 & 126.2 & 0.7 & 12 \\
+ppo\_wF8\_s0 & 200k & {'w\_f': 8.0} & 219.6 & 218.3 & 0.4 & 12 \\
+ppo\_wF8\_s1 & 200k & {'w\_f': 8.0} & 217.7 & 217.7 & 4.3 & 12 \\
+ppo\_wV100\_s0 & 200k & {'w\_v': 100.0} & 213.5 & 213.0 & 0.0 & 12 \\
+ppo\_wV100\_s1 & 200k & {'w\_v': 100.0} & 213.2 & 213.2 & 1.7 & 19 \\
+ppo\_wV25\_s0 & 200k & {'w\_v': 25.0} & 114.4 & 114.2 & 0.1 & 12 \\
+ppo\_wV25\_s1 & 200k & {'w\_v': 25.0} & 113.2 & 113.0 & 1.8 & 12 \\
+\bottomrule
+\end{longtable}

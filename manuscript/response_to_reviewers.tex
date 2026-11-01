@@ -1,0 +1,333 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{mathptmx}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{parskip}
+\usepackage{xr}
+\usepackage{url}
+\externaldocument{access}
+\input{results_macros.tex}
+\newcommand{\rc}[1]{\par\noindent\textbf{Comment #1}\par}
+\newcommand{\resp}{\par\noindent\textbf{Response:}\ }
+\newcommand{\chg}{\par\noindent\textbf{Changes in the manuscript:}\ }
+\newcommand{\quoted}[1]{\begin{quote}\itshape #1\end{quote}}
+\begin{document}
+
+\begin{center}
+{\large\bfseries Response to the Reviewers}\\[4pt]
+Resubmission of the manuscript previously titled ``Coordinated V2G Voltage and Frequency-State Regulation in a Two-Area System: A Gaussian Actor--Critic Simulation Framework'' (manuscript ID: \textcolor{red}{[previous ID]})\\[2pt]
+New title: ``Two-Time-Scale Coordination of Vehicle-to-Grid Voltage Support and Frequency Reserve in a Two-Area System Using Proximal Policy Optimization''
+\end{center}
+
+Dear Editor and Reviewers,
+
+We thank both reviewers for their careful and direct assessment. They
+identified the central weakness of the previous version correctly: the
+controller was never trained, the network and frequency models were
+algebraic surrogates, and the comparison curves were derived rather
+than simulated. We agree with this assessment. Rather than revising
+the text, we rebuilt the study from the model upward. The main changes
+are:
+
+\begin{enumerate}[leftmargin=1.5em]
+\item The surrogate voltage equations were replaced by an AC power flow
+on the IEEE 33-bus feeder (Baran--Wu data) in each area, solved by a
+backward/forward sweep and verified against pandapower (maximum voltage
+difference $\ValVerr$~p.u.).
+\item The algebraic frequency equation was replaced by a dynamic
+two-area load-frequency control model with inertia, damping,
+governor--turbine dynamics, a tie line with synchronizing coefficient,
+ACE-based AGC, and a saturated V2G droop loop, integrated at a 20-ms
+step. Hourly scheduling and second-level frequency dynamics are now
+separate time scales.
+\item All actions and states have physical units: fleet size, battery
+capacity, charger rating, efficiencies, availability, driving energy,
+area base, and tie-line dynamics are specified (Table~\ref{tab:params} of the
+manuscript). Sampled actions are clipped before use, and set-points are
+projected onto charger and energy limits; raw-action clippings and
+physical projections are counted separately.
+\item PPO is now actually trained (Stable-Baselines3) with \NSeed{}
+independent seeds for \TrainSteps{} steps each, with a fixed validation
+set and a stated convergence criterion. All diagnostic or analytical
+curves of the previous version (old Figs.~3 to 8 and 13) were removed.
+\item Three benchmark controllers are simulated independently under
+identical scenarios, disturbances, network, and constraints:
+uncontrolled charging, a conventional rule-based volt-watt and droop
+controller, and a day-ahead optimization with perfect foresight.
+\item Results are reported on 30 held-out days and 20
+out-of-distribution stress days with quantitative metrics, standard
+deviations across days and seeds, and paired significance tests. A
+reward ablation is included.
+\item The energy exchanged by the frequency droop loop is included in
+the fleet energy balance with both efficiencies. Four treatments of
+this term were compared against exact 3600-s simulations of every
+evaluated hour; the adopted treatment tracks the exact value to within 6\% and the
+results are insensitive to the choice (Section~\ref{sec:regenergy}).
+\item Raw-action saturation of the Gaussian policy is reported per
+action dimension and compared with a bounded (tanh-squashed, gSDE)
+policy trained at the same budget (Section~\ref{sec:clip}).
+\item All policies were trained from scratch in the final model
+version; every number in the manuscript is recomputed from the raw
+result files by an independent verification script, and the code,
+trained policies, data, checksums, and exact package versions are
+released.
+\end{enumerate}
+
+Because the model, the method, and all results changed, we are
+submitting the work as a new manuscript and summarize below how each
+comment was addressed. Section, table, and figure numbers refer to the
+new manuscript.
+
+\section*{Reviewer 1}
+
+\rc{1.1} \emph{Implement and document a complete training procedure,
+with genuine training and held-out evaluation results, or redefine the
+contribution.}
+\resp We implemented the complete PPO procedure (clipped surrogate
+objective, generalized advantage estimation, minibatch updates) with
+Stable-Baselines3. Training uses \NSeed{} seeds, four parallel
+environments, and randomized daily scenarios. Every 6144 steps the
+deterministic policy is evaluated on ten fixed validation days, and
+the policy is finally tested on 30 held-out days and 20 stress days
+that are never used for training or model selection. The final
+validation cost changes by at most \ConvChangePct\% over the last
+50\,000 steps.
+\chg Section~\ref{sec:ppo} (training procedure), Table~\ref{tab:params} (hyperparameters),
+Fig.~\ref{fig:learning} (learning curves on training and validation days), Section~\ref{sec:training}.
+
+\rc{1.2} \emph{Implement a documented network model with branch
+parameters, nodal injections, and a reproducible power-flow solution,
+or stop presenting the surrogate as IEEE 33-bus.}
+\resp Each area now contains the IEEE 33-bus feeder with the original
+branch impedances and nominal loads (12.66~kV), taken from the
+pandapower case library. Net nodal injections combine load, PV, and V2G
+power at specified buses, and the power flow is solved by the direct
+BIBC/BCBV method. The base case reproduces the published values
+(minimum voltage \ValVmin~p.u.\ at bus 18, loss \ValLoss~kW), and the
+solver agrees with pandapower Newton--Raphson to within $\ValVerr$~p.u.
+over 20 random operating points.
+\chg Section~\ref{sec:feeders}, Eqs.~(\ref{eq:netload}) and (\ref{eq:bfs}), Fig.~\ref{fig:feeder}, Section~\ref{sec:verif}.
+
+\rc{1.3} \emph{Provide a physically justified frequency model, define
+the units of the coefficient 0.15, and relate actions to power
+imbalance.}
+\resp The coefficient 0.15 and the algebraic frequency equation were
+removed. The new model (Eqs.~(\ref{eq:swing}) to (\ref{eq:evdroop})) is the standard two-area LFC
+model in per unit of a 500-MW area base and 50~Hz, with inertia
+constants that decrease with PV output, load damping, governor and
+turbine time constants, droop, a tie line with synchronizing
+coefficient $T_{12}$, ACE, and integral AGC. The V2G action enters
+physically: the reserve in MW sets the droop gain and the saturation
+of the fleet's response. The model reproduces the closed-form
+steady-state deviation ($\ValDfSim$~Hz simulated against $\ValDfTh$~Hz
+theoretical) and tie-line change.
+\chg Section~\ref{sec:lfcmodel}, Table~\ref{tab:params}, Section~\ref{sec:verif}.
+
+\rc{1.4} \emph{Simulate the controlled and baseline cases independently
+under identical conditions, include an uncontrolled case and a
+conventional controller, with quantitative indices.}
+\resp All controllers now run in the same environment with the same
+scenarios, the same per-hour disturbance seeds, the same network, and
+the same constraints. The benchmarks are uncontrolled charging (UC), a
+rule-based volt-watt and droop controller (RB), and a day-ahead
+optimization with perfect foresight (DAO). Sixteen quantitative indices
+are reported with standard deviations, and paired Wilcoxon tests are
+given. On the test days, PPO reduces the daily cost by \TRedCostDAO\%,
+\TRedCostRB\%, and \TRedCostUC\% relative to DAO, RB, and UC ($p=\TPDAO$).
+\chg Sections~\ref{sec:bench} and \ref{sec:protocol}, Tables~\ref{tab:test} and \ref{tab:stress}, Figs.~\ref{fig:day} to \ref{fig:box}.
+
+\rc{1.5} \emph{The active-power-loss comparison in Fig.~13 cannot be
+reproduced.}
+\resp The figure has been removed. Feeder losses are now computed from
+the branch currents of the power-flow solution and are reported as one
+of the indices in Table~\ref{tab:test}, for every controller.
+\chg Table~\ref{tab:test}.
+
+\rc{1.6} \emph{Define the physical units and scaling of each action,
+impose explicit bounds, and demonstrate compliance with fleet power,
+converter, and inter-area limits.}
+\resp The action now consists of a normalized set-point and a reserve
+share per area. Eqs.~(\ref{eq:decode}) and (\ref{eq:reserve}) map them to MW using the plugged-in
+charger rating, and the set-point is projected onto the charger and
+energy limits of Eqs.~(\ref{eq:pdis}) and (\ref{eq:pch}); the reserve is limited so that the
+droop deployment also respects these limits. Actions sampled from the
+Gaussian policy are clipped to $[-1,1]$ before this mapping. Raw-action
+clipping and physical projection are counted separately: the PPO policy
+mean lies outside $[-1,1]$ for \RawClipFracPct\% of action components
+(saturation at the design limits), while the physical projection is
+never active for PPO. The combined scheduled and droop power is audited
+at every 20-ms step and never exceeds the charger or energy limits
+(Section~\ref{sec:regenergy}, Table~\ref{tab:regenergy}). Tie-line power is a dynamic state of the LFC
+model, and its RMS deviation is reported. The ``MW'' labels
+of the old figures, which had no physical basis, are gone.
+\chg Section~\ref{sec:obsact}, Section~\ref{sec:regenergy}, Tables~\ref{tab:test} and \ref{tab:regenergy}.
+
+\rc{1.7} \emph{Provide an energy-consistent fleet model.}
+\resp The fleet model (Eqs.~(\ref{eq:prate}) to (\ref{eq:regenergy})) specifies 300 vehicles per
+feeder, 60-kWh batteries, 7.4-kW chargers, charging and discharging
+efficiencies of 0.92, a 1-h step, SoC limits of 0.20 and 0.90,
+time-varying plug-in availability, and 9~kWh of daily driving energy
+per vehicle. SoC-dependent power limits follow from the remaining
+energy. The energy exchanged by the frequency droop loop is computed
+from the fast-layer simulations of every hour, with both efficiencies,
+and added to the energy balance (Eq.~(\ref{eq:energy})); four
+treatments of this term are compared with exact 3600-s simulations in
+Section~\ref{sec:regenergy} and its size is reported in
+Table~\ref{tab:regenergy}. Raw-action clippings, projection events, and unmet mobility energy are recorded and
+reported.
+\chg Section~\ref{sec:fleet}, Tables~\ref{tab:params}, \ref{tab:test}, and \ref{tab:regenergy}.
+
+\rc{1.8} \emph{Justify the penalty weights, specify the voltage and
+frequency limits, penalize both lower and upper voltage deviations,
+and demonstrate the effect of the reward design.}
+\resp The reward now penalizes both undervoltage and overvoltage
+outside 0.95 to 1.05~p.u., the frequency nadir, the tie-line deviation,
+battery throughput, unmet mobility energy, and the end-of-day SoC
+deficit (Eq.~(\ref{eq:cost})). The weights were set so that voltage and frequency
+costs are of the same order on an uncontrolled day, which is stated in
+the text. A reward ablation (Table~\ref{tab:ablation}) retrains the policy without the
+overvoltage term, without the frequency terms, and without the
+throughput term, and evaluates each with the full cost against a
+reference trained with the same budget. Removing the frequency terms
+clearly reduces the reserve (\AblNoFReserveMeanMw~MW instead of
+\AblRefReserveMeanMw~MW) and deepens the nadir, which confirms
+that the learned reserve allocation comes from these terms. Removing
+the overvoltage or throughput term gives no difference beyond the
+seed-to-seed spread; the lower mean cost of these variants is traced,
+through a cost decomposition, to the slowly learned terminal-SoC term
+and the shorter training budget, not to the removed term. Halving and
+doubling $w_V$ and $w_f$ move reserve, undervoltage, and terminal SoC
+in the expected directions (Table~\ref{tab:sensitivity}).
+\chg Section~\ref{sec:reward}, Section~\ref{sec:ablation}, Tables~\ref{tab:ablation} and \ref{tab:sensitivity}.
+
+\rc{1.9} \emph{Report genuine training episodes, learning settings,
+convergence criteria, and evaluation on unseen conditions with multiple
+seeds and varying load, solar, and fleet participation.}
+\resp Done as described under Comment 1.1. The scenario generator
+varies load level, cloud cover, intra-day PV variability, fleet
+participation, initial SoC, and disturbance size. Test days come from
+an independent random stream, and the stress days use heavier load, lower
+participation, and larger disturbances than any training day, combined
+with clear-sky PV at the upper end of the training range. Results are given as mean $\pm$ standard deviation across
+days, with the seed-to-seed standard deviation in parentheses.
+\chg Sections~\ref{sec:profiles}, \ref{sec:ppo}, \ref{sec:protocol}, and \ref{sec:training} to \ref{sec:stress}.
+
+\rc{1.10} \emph{Identify the specific technical innovation and compare
+with prior work.}
+\resp The revised contribution is the joint, learned allocation of
+each fleet's converter capability between hourly voltage support and
+frequency reserve, evaluated on a branch-resolved distribution model
+and a dynamic two-area LFC model at the same time. Voltage-oriented
+V2G studies do not model frequency dynamics, and frequency-oriented
+V2G studies do not evaluate feeder voltages; aggregate PEV models for
+primary frequency control fix the participation in advance. The
+results show the value of this allocation: PPO holds more reserve than
+the fixed-share benchmarks where vehicles are connected and inertia is
+low, releases it when voltage support needs the converter, and still
+achieves lower undervoltage than a perfect-foresight schedule.
+Where the gains are small, as for the frequency nadir (5\% relative to
+the day-ahead optimization), the manuscript says so.
+\chg Section~\ref{sec:introduction} (rewritten), contribution list, Section~\ref{sec:alloc}.
+
+\textbf{Additional question 4 (references).} We added references on
+aggregate PEV frequency control models, two-time-scale RL voltage
+control, low-inertia systems, LFC modeling, the power-flow method,
+pandapower, Stable-Baselines3, generalized advantage estimation, and
+reproducibility in deep RL.
+
+\section*{Reviewer 2}
+
+\rc{2.1} \emph{Train the controller, report real learning curves from
+several seeds, and remove Figs.~3 to 8.}
+\resp PPO is trained with \NSeed{} seeds; Fig.~\ref{fig:learning} shows the real
+learning curves on training and validation episodes. Old Figs.~3 to 8
+were removed.
+
+\rc{2.2} \emph{Explain how Fig.~12 was produced; under Eqs.~(3) to (6)
+the minimum voltage cannot reach 0.955~p.u.; conflict with Fig.~14.}
+\resp The reviewer is right. The previous voltage equations and figures
+were inconsistent and have been withdrawn. All voltages in the new
+manuscript come from the AC power flow, and every voltage figure and
+table is generated from the same simulation records by the released
+scripts.
+
+\rc{2.3} \emph{Explain the gap between Figs.~10 and 11 (SoC change
+inconsistent with Eq.~(9)); exact zeros in Fig.~10; noisy Fig.~16.}
+\resp These figures were inconsistent with the previous model and have
+been withdrawn. In the new version, SoC follows the energy balance of
+Eq.~(\ref{eq:energy}), which can be checked against the reported set-points
+(Fig.~\ref{fig:day}(c) and (e)).
+
+\rc{2.4} \emph{Use a real network or rename the environment.}
+\resp See the response to Comment 1.2.
+
+\rc{2.5} \emph{Use a real two-area frequency model with inertia,
+damping, governor, per-area frequency, tie-line power with a
+synchronizing coefficient, and ACE, at a suitable time step; separate
+the time scales.}
+\resp Implemented exactly as suggested (Section~\ref{sec:lfcmodel}): per-area
+frequency, inertia, damping, governor and turbine, tie line with
+$T_{12}$, ACE with integral AGC, a 20-ms RK4 step within a 60-s window
+each hour, and an hourly scheduling layer for voltage and energy.
+
+\rc{2.6} \emph{Give the actions physical units; clip or squash actions
+before env.step(); add an overvoltage penalty; consider cost and
+degradation terms.}
+\resp See Comments 1.6 to 1.8. Actions are clipped before use, an
+overvoltage penalty is included, and a throughput-based degradation
+proxy is part of the reward (its effect is shown in the ablation). We
+also compared clipping with squashing: a tanh-squashed Gaussian policy
+with generalized state-dependent exploration was trained with three
+seeds at the ablation budget. It removes saturation by construction
+but reaches a higher cost than the clipped policy at that budget
+(Table~\ref{tab:clip}); the clipped policy is therefore retained and
+its saturation per action dimension is reported. An electricity-cost
+term was not added, because the paper is about the technical
+allocation of converter capability; it is listed as future work.
+
+\rc{2.7} \emph{Use a realistic daily load profile; the $\sin^2$ shape
+peaks at midnight and noon.}
+\resp Correct; the previous profile had a 12-h period. The new profiles
+(Fig.~\ref{fig:profiles}) have a residential evening peak at 19:00 to 21:00 and a mixed
+commercial and residential daytime plateau. They are synthetic and
+are randomized in level and noise for each scenario.
+
+\rc{2.8} \emph{Report voltage violation hours and magnitude, frequency
+deviation statistics, SoC at end of day, and energy cycled across seeds
+and scenarios.}
+\resp All of these are reported in Table~\ref{tab:test} for the test days (Table~\ref{tab:stress}
+gives the main subset for the stress days, and the full stress-day
+records are in the released data): violation hours,
+integrated undervoltage and overvoltage, minimum and maximum voltage,
+mean and worst nadir, RMS frequency deviation, RoCoF, tie-line
+deviation, terminal SoC deficit, fleet throughput, unmet mobility energy, projection events, and
+losses, across \NSeed{} seeds and 30 test or 20 stress days.
+
+\rc{2.9} \emph{Share the code and data.}
+\resp The complete code (environment, models, verification, training,
+evaluation, figure scripts), the trained policies, and the result files
+are available at \url{https://github.com/kenoto99/v2g-ppo-two-area}
+(release v3.0), and the release will be archived with a DOI on Zenodo,
+given in the Data and Code Availability statement.
+
+\rc{2.10} \emph{Cut the repeated disclaimers once real results are in;
+fix the keywords and subject category.}
+\resp The disclaimers were removed because the underlying limitations
+were removed. Remaining limitations are stated once, in Section~\ref{sec:limits}.
+The keywords now are: electric vehicles, frequency regulation,
+load-frequency control, proximal policy optimization, reinforcement
+learning, vehicle-to-grid, voltage regulation.
+
+\textbf{Additional question 1.} The previous evaluation was a single
+seeded rollout of an untrained policy. The new results are from
+trained policies evaluated on unseen days.
+
+We thank the reviewers again. Their comments led to a substantially
+stronger study.
+
+Sincerely,\\
+Krischonme Bhumkittipich, on behalf of all authors
+
+\end{document}

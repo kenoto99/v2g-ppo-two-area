@@ -1,0 +1,18 @@
+\begin{table*}[!t]
+\caption{Reward-weight sensitivity on the test days (mean $\pm$ standard deviation across seeds; 200\,000 steps; evaluation with the nominal weights of Table~\ref{tab:params}).}
+\label{tab:sensitivity}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccccccc}
+\toprule
+\textbf{Reward variant (seeds)} & \textbf{Cost} & \textbf{UV (p.u.$\cdot$h)} & \textbf{OV (p.u.$\cdot$h)} & \textbf{Nadir (mHz)} & \textbf{Reserve (MW)} & \textbf{Thr. (MWh)} & \textbf{SoC def. (\%)}\\
+\midrule
+Full reward (reference) (3) & 147.3 $\pm$ 10.7 & 0.92 $\pm$ 0.03 & 0.003 $\pm$ 0.002 & 47.8 $\pm$ 0.4 & 22.9 $\pm$ 2.6 & 437 $\pm$ 25 & 15.62 $\pm$ 10.68 \\
+$w_V=25$ (half) (2) & 140.1 $\pm$ 0.4 & 1.09 $\pm$ 0.03 & 0.008 $\pm$ 0.003 & 47.0 $\pm$ 0.1 & 26.4 $\pm$ 0.4 & 428 $\pm$ 3 & 2.17 $\pm$ 0.78 \\
+$w_V=100$ (double) (2) & 167.5 $\pm$ 0.4 & 0.85 $\pm$ 0.01 & 0.003 $\pm$ 0.002 & 49.9 $\pm$ 0.1 & 13.9 $\pm$ 0.3 & 442 $\pm$ 19 & 30.85 $\pm$ 0.28 \\
+$w_f=2$ (half) (2) & 161.9 $\pm$ 5.8 & 0.87 $\pm$ 0.00 & 0.001 $\pm$ 0.001 & 49.3 $\pm$ 0.8 & 16.5 $\pm$ 3.4 & 458 $\pm$ 30 & 27.38 $\pm$ 2.56 \\
+$w_f=8$ (double) (2) & 140.5 $\pm$ 0.4 & 1.00 $\pm$ 0.01 & 0.007 $\pm$ 0.001 & 46.9 $\pm$ 0.4 & 26.6 $\pm$ 1.3 & 415 $\pm$ 21 & 7.84 $\pm$ 0.90 \\
+\bottomrule
+\end{tabular}
+\end{table*}

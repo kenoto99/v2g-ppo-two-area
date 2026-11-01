@@ -1,0 +1,108 @@
+\documentclass{ieeeaccess}
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{url}
+\graphicspath{{figures/}}
+
+% ------------------------------------------------------------------
+% Draft markup: citations in red and red [CITE] tags for statements
+% that still need a source. Set \draftmarkupfalse for the clean
+% submission copy.
+\newif\ifdraftmarkup \draftmarkuptrue
+\ifdraftmarkup
+  \let\origcite\cite
+  \renewcommand{\cite}[1]{\textcolor{red}{\origcite{#1}}}
+  \newcommand{\CITE}{\textcolor{red}{[CITE]}}
+\else
+  \newcommand{\CITE}{}
+\fi
+% ------------------------------------------------------------------
+
+\input{results_macros.tex}
+
+\newcommand{\authorphoto}[1]{%
+  \IfFileExists{#1}
+  {\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{#1}}%
+  {\fbox{\parbox[c][1.17in][c]{0.92in}{\centering\scriptsize Author\\photo}}}}
+
+\begin{document}
+
+\history{Date of publication xxxx 00, 2026, date of current version xxxx 00, 2026.}
+\doi{10.1109/ACCESS.2026.XXXXXXX}
+
+\title{Two-Time-Scale Coordination of Vehicle-to-Grid Voltage Support and Frequency Reserve in a Two-Area System Using Proximal Policy Optimization}
+
+\author{
+\uppercase{Sontaya Manmai}\authorrefmark{1}
+\IEEEmembership{Student Member, IEEE},
+\uppercase{Prakasit Prabpal}\authorrefmark{2},
+\uppercase{Yuttana Kongjeen}\authorrefmark{3},
+\uppercase{Wasan Phetphimoon}\authorrefmark{4},
+\uppercase{Kulsomsup Yenchamchalit}\authorrefmark{5},
+\uppercase{Somchat Sonasang}\authorrefmark{6}
+\IEEEmembership{Member, IEEE}, and
+\uppercase{Krischonme Bhumkittipich}\authorrefmark{1,$*$}
+}
+
+\address[1]{Department of Electrical Engineering, Faculty of Engineering,
+Rajamangala University of Technology Thanyaburi,
+Pathum Thani 12110, Thailand
+(e-mail: sontaya\_m@mail.rmutt.ac.th; krischonme.b@en.rmutt.ac.th)}
+\address[2]{Department of Electrical Technology,
+Udon Thani Technical College,
+Institute of Vocational Education Northeastern Region 1,
+Udon Thani 41000, Thailand
+(e-mail: prakasit.pra@udontech.ac.th)}
+\address[3]{Intelligent Power System and Energy Research (IPER),
+Department of Electrical Engineering,
+Faculty of Engineering and Technology,
+Rajamangala University of Technology Isan,
+Nakhon Ratchasima 30000, Thailand
+(e-mail: yuttana.ko@rmuti.ac.th)}
+\address[4]{Department of Electrical Engineering Technology,
+Faculty of Industrial Technology,
+Kamphaeng Phet Rajabhat University,
+Kamphaeng Phet 62000, Thailand
+(e-mail: wasan@kpru.ac.th)}
+\address[5]{Department of Electrical Industrial Technology,
+Faculty of Industrial Technology,
+Thepsatri Rajabhat University,
+Lopburi 15000, Thailand
+(e-mail: kulsomsap.y@lawasri.tru.ac.th)}
+\address[6]{Electrical Elements and Wireless Devices Unit (EEWDU),
+Faculty of Industrial Technology,
+Nakhon Phanom University,
+Nakhon Phanom 48000, Thailand
+(e-mail: somchat.s@npu.ac.th)}
+
+\corresp{Corresponding author: Krischonme Bhumkittipich
+(e-mail: krischonme.b@en.rmutt.ac.th)}
+
+\tfootnote{This work was supported in part by Rajamangala University of Technology Thanyaburi, Thailand.}
+
+\markboth
+{Manmai \headeretal: Two-Time-Scale Coordination of V2G Voltage Support and Frequency Reserve}
+{Manmai \headeretal: Two-Time-Scale Coordination of V2G Voltage Support and Frequency Reserve}
+
+\input{sec_abstract.tex}
+
+\titlepgskip=-21pt
+\maketitle
+
+\input{sec_intro_methods.tex}
+\input{sec_results.tex}
+
+\input{sec_references.tex}
+
+\input{sec_bios.tex}
+
+\EOD
+
+\end{document}

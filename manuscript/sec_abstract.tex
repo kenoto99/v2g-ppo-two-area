@@ -1,0 +1,41 @@
+\begin{abstract}
+An aggregated fleet of vehicle-to-grid (V2G) electric vehicles can
+support distribution voltages and provide frequency reserve, but both
+services draw on the same converter rating and stored energy. This
+paper formulates their coordination as a two-time-scale control problem
+in which each area aggregator chooses, every hour, a fleet power
+set-point and the share of its plugged-in converter rating held as
+frequency reserve. The set-points are evaluated by AC power flow on an
+IEEE 33-bus feeder in each of two areas, together with an
+energy-consistent fleet model with charger ratings, efficiencies,
+availability, and driving demand. The reserve sets the gain and limit of
+a V2G droop loop in a dynamic two-area load-frequency control model with
+inertia, governors, a tie line, and automatic generation control,
+simulated at a 20-ms step. A proximal policy optimization (PPO) agent is
+trained with \NSeed{} independent seeds on randomized load, solar, fleet,
+and disturbance scenarios and compared with uncontrolled charging, a
+rule-based volt-watt and droop controller, and a day-ahead optimization
+with perfect foresight, all simulated under identical conditions. On 30
+held-out days, PPO lowers the daily operating cost by \TRedCostDAO\%,
+\TRedCostRB\%, and \TRedCostUC\% relative to these benchmarks, reduces
+undervoltage by \TRedUvPuHDAO\% and the mean frequency nadir by
+\TRedNadirMeanHzDAO\% relative to the day-ahead optimization, and leaves
+a smaller end-of-day energy deficit than both. The learned policy holds
+reserve mainly where and when vehicles are plugged in, including
+low-inertia midday hours, and releases it when converter capacity is
+needed for voltage support. The energy exchanged by the frequency
+droop loop is accounted for in the fleet energy balance; a comparison
+with exact 3600-s simulations shows that extrapolating a 60-s window
+to the hour overstates this energy by a factor of two to three, while
+the treatment adopted here tracks the exact value to within 6\%, and
+that no treatment changes the results. Results on out-of-distribution stress days, a reward
+ablation, a weight-sensitivity study, and a bounded-action policy
+comparison are also reported, and the code, trained policies, and
+data are released.
+\end{abstract}
+
+\begin{keywords}
+Electric vehicles, frequency regulation, load-frequency control,
+proximal policy optimization, reinforcement learning, vehicle-to-grid,
+voltage regulation.
+\end{keywords}
