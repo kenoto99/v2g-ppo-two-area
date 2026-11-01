@@ -2,7 +2,7 @@
   "title": "Two-Time-Scale Coordination of Vehicle-to-Grid Voltage Support and Frequency Reserve in a Two-Area System Using Proximal Policy Optimization: code, trained policies and data",
   "upload_type": "software",
   "license": "MIT",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "creators": [
     {"name": "Manmai, Sontaya", "affiliation": "Rajamangala University of Technology Thanyaburi"},
     {"name": "Prabpal, Prakasit", "affiliation": "Udon Thani Technical College"},

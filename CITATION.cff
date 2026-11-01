@@ -2,7 +2,8 @@ cff-version: 1.2.0
 title: "Two-Time-Scale Coordination of Vehicle-to-Grid Voltage Support and Frequency Reserve in a Two-Area System Using Proximal Policy Optimization: code and data"
 message: "If you use this software or data, please cite it as below."
 type: software
-version: 3.0.0
+version: 3.0.1
+doi: 10.5281/zenodo.23851585
 date-released: 2026-11-01
 license: MIT
 repository-code: https://github.com/kenoto99/v2g-ppo-two-area
