@@ -1,8 +1,8 @@
 # Verification report
 
-Generated 2026-11-01 10:27 by `scripts/verify_all.py`.
+Generated 2026-11-01 10:35 by `scripts/verify_all.py`.
 
-**Summary: 75 PASS, 1 FAIL.**
+**Summary: 76 PASS, 0 FAIL.**
 
 
 ## 1. Physics and bookkeeping tests (tests/test_physics.py)
@@ -111,5 +111,5 @@ Macros not independently recomputed (410; formatting helpers, counts of seeds/da
 
 | Result | Check | Detail |
 |---|---|---|
-| **FAIL** | no result-like literal numbers outside the whitelist of model parameters | non-whitelisted literals: 10.5281 |
+| PASS | no result-like literal numbers outside the whitelist of model parameters | non-whitelisted literals: none |
 | PASS | manuscript compiles without undefined control sequences or references |  |
