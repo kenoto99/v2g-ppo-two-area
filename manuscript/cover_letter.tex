@@ -1,0 +1,113 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{mathptmx}
+\usepackage{xcolor}
+\usepackage{parskip}
+\usepackage{url}
+\input{results_macros.tex}
+\pagestyle{empty}
+\begin{document}
+
+\noindent
+Department of Electrical Engineering, Faculty of Engineering\\
+Rajamangala University of Technology Thanyaburi\\
+Pathum Thani 12110, Thailand\\[6pt]
+\today
+
+\vspace{8pt}
+\noindent
+Editor-in-Chief\\
+\emph{IEEE Access}
+
+\vspace{8pt}
+\noindent
+\textbf{Subject: Submission of the manuscript ``Two-Time-Scale Coordination of Vehicle-to-Grid Voltage Support and Frequency Reserve in a Two-Area System Using Proximal Policy Optimization''}
+
+\vspace{6pt}
+Dear Editor,
+
+We are pleased to submit the above manuscript for consideration in
+\emph{IEEE Access}. The work is a complete rebuild of a manuscript that
+was previously reviewed by the journal and rejected under the title
+``Coordinated V2G Voltage and Frequency-State Regulation in a Two-Area
+System: A Gaussian Actor--Critic Simulation Framework'' (manuscript ID:
+\textcolor{red}{[previous ID]}). The reviewers of that version found,
+correctly, that the controller had not been trained and that the
+network and frequency models were algebraic surrogates. Rather than
+revise the text, we rebuilt the study from the model upward and are
+submitting it as a new manuscript. A point-by-point response to the
+earlier reviews is enclosed so that the Editor can see how each comment
+was addressed.
+
+\textbf{What the paper does.} An aggregated fleet of vehicle-to-grid
+electric vehicles can support distribution voltages and provide
+frequency reserve, but both services draw on the same converter rating
+and stored energy. The paper formulates their coordination as a
+two-time-scale control problem: every hour each area aggregator chooses
+a fleet power set-point and the share of its plugged-in converter rating
+held as frequency reserve. The set-points are evaluated by AC power flow
+on IEEE 33-bus feeders in two areas with an energy-consistent fleet
+model; the reserve sets the gain and limit of a V2G droop loop in a
+dynamic two-area load-frequency control model with inertia, governors,
+a tie line, and automatic generation control, simulated at a 20-ms
+step. A proximal policy optimization agent is trained with \NSeed{}
+independent seeds and compared, under identical conditions, with
+uncontrolled charging, a rule-based volt-watt and droop controller, and
+a day-ahead optimization with perfect foresight.
+
+\textbf{Main findings.} On 30 held-out days the learned policy lowers
+the daily performance cost by \TRedCostDAO\%, \TRedCostRB\%, and
+\TRedCostUC\% relative to the three benchmarks, reduces undervoltage
+by \TRedUvPuHDAO\% and the mean frequency nadir by
+\TRedNadirMeanHzDAO\% relative to the day-ahead optimization, and keeps
+its advantage when that benchmark is re-optimized for every reserve
+share and even against a per-day oracle choice of the share. The paper
+also reports what the method does not achieve: some hours of the weak
+residential feeder stay below 0.95~p.u.\ with every controller, a
+downward activation of the committed reserve can push further hours
+below the band, and consecutive-day operation shows a downward drift of
+the residential fleet energy that a soft terminal penalty does not
+prevent. These limits are quantified in the manuscript rather than left
+to the reader.
+
+\textbf{Why the work suits \emph{IEEE Access}.} The paper combines
+power-system modeling (verified AC power flow and a dynamic LFC model
+in physical units), reinforcement learning with a stated training and
+evaluation protocol, and an unusually complete reproducibility package.
+The energy exchanged by the droop loop is included in the fleet energy
+balance and checked against exact 3600-s simulations; every number in
+the manuscript is recomputed from the raw result files by an
+independent verification script (84 checks); and the code, trained
+policies, result files, checksums, and exact package versions are
+released at \url{https://github.com/kenoto99/v2g-ppo-two-area}
+(archived on Zenodo, DOI 10.5281/zenodo.23851585).
+
+\textbf{Declarations.} The manuscript is original, has not been
+published, and is not under consideration elsewhere. All authors have
+read and approved the submitted version and agree to its submission to
+\emph{IEEE Access}. The author list differs from the previously
+reviewed version: one author withdrew and one author was added, with
+the agreement of all authors. The authors declare no conflict of
+interest. No human or animal subjects were involved. The work was
+supported in part by Rajamangala University of Technology Thanyaburi.
+
+We would be grateful if the manuscript could be handled by an Associate
+Editor in the area of power and energy systems or smart grids. Thank you
+for considering our submission.
+
+\vspace{10pt}
+Sincerely,
+
+\vspace{18pt}
+\noindent
+Krischonme Bhumkittipich (Senior Member, IEEE)\\
+Corresponding author, on behalf of all authors\\
+Professor, Department of Electrical Engineering, Faculty of Engineering\\
+Rajamangala University of Technology Thanyaburi, Pathum Thani 12110, Thailand\\
+E-mail: krischonme.b@en.rmutt.ac.th
+
+\vspace{8pt}
+\noindent\small
+Co-authors: Sontaya Manmai, Prakasit Prabpal, Yuttana Kongjeen, Kulsomsup Yenchamchalit, Somchat Sonasang, and Kritphon Phanrattanachai.
+
+\end{document}
